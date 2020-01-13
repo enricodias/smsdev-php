@@ -1,0 +1,33 @@
+{
+    "name": "enricodias/smsdev",
+    "type": "library",
+    "license": "MIT",
+    "description": "A wrapper to the SmsDev.com.br API.",
+    "keywords": ["smsdev", "sms"],
+    "authors": [
+        {
+            "name": "Enrico Dias",
+            "email": "enrico@enricodias.com"
+        }
+    ],
+    "config": {
+        "sort-packages": true
+    },
+    "require": {
+        "php": ">=5.6",
+        "guzzlehttp/guzzle": "^6.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "enricodias\\SmsDev\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "enricodias\\SmsDev\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">5.7 <9"
+    }
+}
