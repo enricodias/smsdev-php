@@ -219,7 +219,7 @@ class SmsDev
 
         $response = json_decode($response->getBody(), true);
         
-        if (json_last_error() != JSON_ERROR_NONE) return false;
+        if (json_last_error() != JSON_ERROR_NONE || is_array($response) === false) return false;
 
         $this->_result = $response;
 
