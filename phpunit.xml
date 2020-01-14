@@ -33,7 +33,6 @@
     </filter>
     <logging>
         <log type="coverage-clover" target="tests/_reports/logs/clover.xml"/>
-        <log type="coverage-text" target="tests/_reports/logs/coverage.clover"/>
         <log type="coverage-html" target="tests/_reports/coverage" lowUpperBound="35" highLowerBound="70"/>
         <log type="testdox-text" target="tests/_reports/testdox/executed.txt"/>
     </logging>

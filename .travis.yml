@@ -19,7 +19,7 @@ script:
   - php vendor/bin/phpunit
 
 after_success:
-  - php vendor/bin/ocular code-coverage:upload --format=php-clover tests/_reports/logs/coverage.clover
+  - php vendor/bin/ocular code-coverage:upload --format=php-clover tests/_reports/logs/clover.xml
 
 branches:
   only: 
