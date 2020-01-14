@@ -159,4 +159,27 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertSame('01/01/2019', $query['date_from']);
         $this->assertArrayNotHasKey('date_to', $query);
     }
+
+    /**
+     * Test the timezone calculations in the date filters.
+     * 
+     * Example: 2020-01-02 01:00:00 should be day 2020-01-01 in America/Sao_Paulo
+     */
+    public function testTimezoneDate()
+    {
+        $SmsDev = $this->getServiceMock();
+
+        date_default_timezone_set('UTC');
+
+        $SmsDev->setDateFormat('Y-m-d H:i:s')
+            ->setFilter()
+                ->dateFrom('2020-01-02 01:00:00')
+            ->fetch();
+
+        $this->assertSame('/get', $this->_container[0]['request']->getUri()->getPath());
+
+        $query = $this->_container[0]['request']->getHeaders()['query'];
+
+        $this->assertSame('01/01/2020', $query['date_from']);
+    }
 }

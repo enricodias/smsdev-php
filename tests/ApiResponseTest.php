@@ -72,7 +72,7 @@ final class ApiResponseTest extends SmsDevMock
 
         $parsedMessages = current($SmsDev->parsedMessages());
         
-        $this->assertSame('2018-01-19 11:35:14', $parsedMessages['date']);
+        $this->assertSame('2018-01-19 13:35:14', $parsedMessages['date']); // UTC conversion
         $this->assertSame('5511988887777',       $parsedMessages['number']);
         $this->assertSame('Resposta',            $parsedMessages['message']);
     }
