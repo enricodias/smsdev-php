@@ -231,6 +231,8 @@ class SmsDev
      * This method is needed to test API calls in unit tests.
      *
      * @return object GuzzleHttp\Client instance.
+     * 
+     * @codeCoverageIgnore
      */
     protected function getGuzzleClient()
     {
