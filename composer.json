@@ -2,7 +2,7 @@
     "name": "enricodias/smsdev",
     "type": "library",
     "license": "MIT",
-    "description": "A wrapper to the SmsDev.com.br API.",
+    "description": "Send and receive SMS using SmsDev.com.br",
     "keywords": ["smsdev", "sms"],
     "authors": [
         {
