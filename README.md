@@ -1,5 +1,12 @@
 # smsdev-php
 
+[![Build Status](https://travis-ci.com/enricodias/smsdev-php.svg?branch=master)](https://travis-ci.com/enricodias/smsdev-php)
+[![Code Coverage](https://scrutinizer-ci.com/g/enricodias/smsdev-php/badges/coverage.png?b=master)](https://scrutinizer-ci.com/g/enricodias/smsdev-php/?branch=master)
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/enricodias/smsdev-php/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/enricodias/smsdev-php/?branch=master)
+[![Latest version](http://img.shields.io/packagist/v/enricodias/smsdev.svg)](https://packagist.org/packages/enricodias/smsdev)
+[![Downloads total](http://img.shields.io/packagist/dt/enricodias/smsdev.svg)](https://packagist.org/packages/enricodias/smsdev)
+[![License](http://img.shields.io/packagist/l/enricodias/smsdev.svg)](https://github.com/enricodias/smsdev-php/blob/master/LICENSE.md)
+
 Send and receive SMS using [SmsDev.com.br](https://www.smsdev.com.br)
 
 ## Installation
