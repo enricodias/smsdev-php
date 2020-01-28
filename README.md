@@ -5,7 +5,7 @@
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/enricodias/smsdev-php/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/enricodias/smsdev-php/?branch=master)
 [![Latest version](http://img.shields.io/packagist/v/enricodias/smsdev.svg)](https://packagist.org/packages/enricodias/smsdev)
 [![Downloads total](http://img.shields.io/packagist/dt/enricodias/smsdev.svg)](https://packagist.org/packages/enricodias/smsdev)
-[![License](http://img.shields.io/packagist/l/enricodias/smsdev.svg)](https://github.com/enricodias/smsdev-php/blob/master/LICENSE.md)
+[![License](http://img.shields.io/packagist/l/enricodias/smsdev.svg)](https://github.com/enricodias/smsdev-php/blob/master/LICENSE)
 
 Send and receive SMS using [SmsDev.com.br](https://www.smsdev.com.br)
 
@@ -14,7 +14,7 @@ Send and receive SMS using [SmsDev.com.br](https://www.smsdev.com.br)
 Require this package with Composer in the root directory of your project.
 
 ```bash
-composer require enricodias/smsdev-php
+composer require enricodias/smsdev
 ```
 
 ## Usage
