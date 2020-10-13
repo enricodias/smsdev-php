@@ -35,12 +35,12 @@ final class ApiRequestsTest extends SmsDevMock
 
         $this->assertSame('/send', $this->_container[0]['request']->getUri()->getPath());
 
-        $query = $this->_container[0]['request']->getHeaders()['query'];
+        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
 
-        $this->assertSame('',              $query['key']);
-        $this->assertSame('9',             $query['type']);
-        $this->assertSame('5511988887777', $query['number']);
-        $this->assertSame('Message',       $query['msg']);
+        $this->assertEquals('',              $query->key);
+        $this->assertEquals('9',             $query->type);
+        $this->assertEquals('5511988887777', $query->number);
+        $this->assertEquals('Message',       $query->msg);
     }
 
     public function testFilterByUnread()

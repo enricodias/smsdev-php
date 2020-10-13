@@ -90,17 +90,17 @@ class SmsDev
         $this->_result = [];
 
         $request = new Request(
-            'GET',
+            'POST',
             $this->_apiUrl.'/send',
             [
-                'query' => [
-                    'key'    => $this->_apiKey,
-                    'type'   => 9,
-                    'number' => $number,
-                    'msg'    => $message,
-                ],
                 'Accept' => 'application/json',
-            ]
+            ],
+            json_encode([
+                'key'    => $this->_apiKey,
+                'type'   => 9,
+                'number' => $number,
+                'msg'    => $message,
+            ])
         );
 
         if ($this->makeRequest($request) === false) return false;
