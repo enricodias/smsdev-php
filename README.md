@@ -46,6 +46,8 @@ The country code optional. The default is 55 (Brazil).
 Get unread messages in a specific date interval:
 
 ```php
+$SmsDev->setDateFormat('Y-m-d');
+
 $SmsDev->setFilter()
             ->isUnread()
             ->dateBetween('2018-01-19', '2019-01-19')
