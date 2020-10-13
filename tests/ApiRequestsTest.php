@@ -15,9 +15,9 @@ final class ApiRequestsTest extends SmsDevMock
 
         $SmsDev->getBalance();
 
-        $this->assertSame('/v1/balance', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/balance', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertSame('',      $query->key);
         $this->assertSame('saldo', $query->action);
@@ -29,9 +29,9 @@ final class ApiRequestsTest extends SmsDevMock
 
         $SmsDev->send('5511988887777', 'Message');
 
-        $this->assertSame('/v1/send', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/send', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('',              $query->key);
         $this->assertEquals('9',             $query->type);
@@ -48,9 +48,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->isUnread()
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('',  $query->key);
         $this->assertEquals('0', $query->status);
@@ -64,9 +64,9 @@ final class ApiRequestsTest extends SmsDevMock
                     ->byId(2515974)
                 ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
         
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('',        $query->key);
         $this->assertEquals('2515974', $query->id);
@@ -81,9 +81,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->dateBetween('2018-01-19', '2019-01-19')
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('',           $query->key);
         $this->assertEquals('19/01/2018', $query->date_from);
@@ -99,9 +99,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->dateBetween('2018-19', '2019-01-19')
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
         
         $this->assertEquals('', $query->key);
         $this->assertObjectNotHasAttribute('date_from', $query);
@@ -114,9 +114,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->dateBetween('2018-01-19', '2019-01')
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('', $query->key);
         $this->assertEquals('19/01/2018', $query->date_from);
@@ -132,9 +132,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->dateTo(1546311600)
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('', $query->key);
         $this->assertObjectNotHasAttribute('date_from', $query);
@@ -147,9 +147,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->dateFrom(1546311600)
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertEquals('', $query->key);
         $this->assertEquals('01/01/2019', $query->date_from);
@@ -172,9 +172,9 @@ final class ApiRequestsTest extends SmsDevMock
                 ->dateFrom('2020-01-02 01:00:00')
             ->fetch();
 
-        $this->assertSame('/v1/inbox', $this->_container[0]['request']->getUri()->getPath());
+        $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
+        $query = $this->getRequestBody();
 
         $this->assertSame('01/01/2020', $query->date_from);
     }

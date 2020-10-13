@@ -43,4 +43,14 @@ abstract class SmsDevMock extends TestCase
         
         return $stub;
     }
+
+    public function getRequestPath()
+    {
+        return $this->_container[0]['request']->getUri()->getPath();
+    }
+
+    public function getRequestBody()
+    {
+        return json_decode($this->_container[0]['request']->getBody()->getContents());
+    }
 }
