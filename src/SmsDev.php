@@ -1,6 +1,6 @@
 <?php
 
-namespace enricodias\SmsDev;
+namespace enricodias;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;

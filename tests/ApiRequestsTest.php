@@ -2,10 +2,6 @@
 
 namespace enricodias\SmsDev\Tests;
 
-use enricodias\SmsDev\SmsDev;
-use PHPUnit\Framework\TestCase;
-use GuzzleHttp\Middleware;
-
 /**
  * Test if the requests sent are compatible with the API specification.
  * 

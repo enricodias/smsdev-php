@@ -2,7 +2,7 @@
 
 namespace enricodias\SmsDev\Tests;
 
-use enricodias\SmsDev\SmsDev;
+use enricodias\SmsDev;
 use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Middleware;
 
