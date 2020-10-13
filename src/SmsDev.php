@@ -21,7 +21,7 @@ class SmsDev
      *
      * @var string
      */
-    private $_apiUrl = 'https://api.smsdev.com.br';
+    private $_apiUrl = 'https://api.smsdev.com.br/v1';
 
     /**
      * API key.
@@ -214,7 +214,7 @@ class SmsDev
 
         $request = new Request(
             'GET',
-            $this->_apiUrl.'/get',
+            $this->_apiUrl.'/inbox',
             [
                 'Accept' => 'application/json',
             ],
@@ -279,7 +279,7 @@ class SmsDev
 
         $request = new Request(
             'GET',
-            $this->_apiUrl.'/get',
+            $this->_apiUrl.'/balance',
             [
                 'Accept' => 'application/json',
             ],
