@@ -216,9 +216,11 @@ class SmsDev
             'GET',
             $this->_apiUrl.'/get',
             [
-                'query'  => $this->_query,
                 'Accept' => 'application/json',
-            ]
+            ],
+            json_encode(
+                $this->_query
+            )
         );
 
         if ($this->makeRequest($request) === false) return false;
