@@ -17,10 +17,10 @@ final class ApiRequestsTest extends SmsDevMock
 
         $this->assertSame('/get', $this->_container[0]['request']->getUri()->getPath());
 
-        $query = $this->_container[0]['request']->getHeaders()['query'];
+        $query = json_decode($this->_container[0]['request']->getBody()->getContents());
 
-        $this->assertSame('',      $query['key']);
-        $this->assertSame('saldo', $query['action']);
+        $this->assertSame('',      $query->key);
+        $this->assertSame('saldo', $query->action);
     }
 
     public function testSend()

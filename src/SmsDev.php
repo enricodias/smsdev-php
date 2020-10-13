@@ -279,12 +279,12 @@ class SmsDev
             'GET',
             $this->_apiUrl.'/get',
             [
-                'query' => [
-                    'key'    => $this->_apiKey,
-                    'action' => 'saldo',
-                ],
                 'Accept' => 'application/json',
-            ]
+            ],
+            json_encode([
+                'key'    => $this->_apiKey,
+                'action' => 'saldo',
+            ])
         );
 
         $this->makeRequest($request);
