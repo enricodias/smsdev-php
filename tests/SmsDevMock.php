@@ -2,7 +2,7 @@
 
 namespace enricodias\SmsDev\Tests;
 
-use enricodias\SmsDev\SmsDev;
+use enricodias\SmsDev;
 use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Middleware;
 
@@ -42,5 +42,15 @@ abstract class SmsDevMock extends TestCase
         $stub->method('getGuzzleClient')->willReturn($client);
         
         return $stub;
+    }
+
+    public function getRequestPath()
+    {
+        return $this->_container[0]['request']->getUri()->getPath();
+    }
+
+    public function getRequestBody()
+    {
+        return json_decode($this->_container[0]['request']->getBody()->getContents());
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace enricodias\SmsDev;
+namespace enricodias;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
@@ -21,7 +21,7 @@ class SmsDev
      *
      * @var string
      */
-    private $_apiUrl = 'https://api.smsdev.com.br';
+    private $_apiUrl = 'https://api.smsdev.com.br/v1';
 
     /**
      * API key.
@@ -90,17 +90,17 @@ class SmsDev
         $this->_result = [];
 
         $request = new Request(
-            'GET',
+            'POST',
             $this->_apiUrl.'/send',
             [
-                'query' => [
-                    'key'    => $this->_apiKey,
-                    'type'   => 9,
-                    'number' => $number,
-                    'msg'    => $message,
-                ],
                 'Accept' => 'application/json',
-            ]
+            ],
+            json_encode([
+                'key'    => $this->_apiKey,
+                'type'   => 9,
+                'number' => $number,
+                'msg'    => $message,
+            ])
         );
 
         if ($this->makeRequest($request) === false) return false;
@@ -214,11 +214,13 @@ class SmsDev
 
         $request = new Request(
             'GET',
-            $this->_apiUrl.'/get',
+            $this->_apiUrl.'/inbox',
             [
-                'query'  => $this->_query,
                 'Accept' => 'application/json',
-            ]
+            ],
+            json_encode(
+                $this->_query
+            )
         );
 
         if ($this->makeRequest($request) === false) return false;
@@ -248,7 +250,9 @@ class SmsDev
 
         foreach ($this->_result as $key => $result) {
 
-            if (array_key_exists('id_sms_read', $result) === false) continue;
+            if (is_array($result) === false) continue;
+
+            if (is_array($result) === false || array_key_exists('id_sms_read', $result) === false) continue;
 
             $id = $result['id_sms_read'];
             $date = \DateTime::createFromFormat('d/m/Y H:i:s', $result['data_read'], $this->_apiTimeZone);
@@ -277,14 +281,14 @@ class SmsDev
 
         $request = new Request(
             'GET',
-            $this->_apiUrl.'/get',
+            $this->_apiUrl.'/balance',
             [
-                'query' => [
-                    'key'    => $this->_apiKey,
-                    'action' => 'saldo',
-                ],
                 'Accept' => 'application/json',
-            ]
+            ],
+            json_encode([
+                'key'    => $this->_apiKey,
+                'action' => 'saldo',
+            ])
         );
 
         $this->makeRequest($request);

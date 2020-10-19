@@ -2,10 +2,6 @@
 
 namespace enricodias\SmsDev\Tests;
 
-use enricodias\SmsDev\SmsDev;
-use PHPUnit\Framework\TestCase;
-use GuzzleHttp\Middleware;
-
 /**
  * Test if the class can parse the API responses correctly.
  * 
@@ -136,6 +132,17 @@ final class ApiResponseTest extends SmsDevMock
         $this->assertSame('1529418914',    $parsedMessages['date']);
         $this->assertSame('5511988887777', $parsedMessages['number']);
         $this->assertSame('Resposta 1',    $parsedMessages['message']);
+    }
+
+    public function testEmptyInbox()
+    {
+        $apiResponse = '[{"situacao":"OK",descricao":"SEM MENSAGENS NA CAIXA DE ENTRADA."}]';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $SmsDev->setDateFormat('Y-m-d H:i:s')->fetch();
+        
+        $this->assertEmpty($SmsDev->parsedMessages());
     }
 
     public function testWrongApiKey()

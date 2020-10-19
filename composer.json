@@ -19,7 +19,7 @@
     },
     "autoload": {
         "psr-4": {
-            "enricodias\\SmsDev\\": "src/"
+            "enricodias\\": "src/"
         }
     },
     "autoload-dev": {
