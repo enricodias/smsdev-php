@@ -250,7 +250,9 @@ class SmsDev
 
         foreach ($this->_result as $key => $result) {
 
-            if (array_key_exists('id_sms_read', $result) === false) continue;
+            if (is_array($result) === false) continue;
+
+            if (is_array($result) === false || array_key_exists('id_sms_read', $result) === false) continue;
 
             $id = $result['id_sms_read'];
             $date = \DateTime::createFromFormat('d/m/Y H:i:s', $result['data_read'], $this->_apiTimeZone);

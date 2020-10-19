@@ -134,6 +134,17 @@ final class ApiResponseTest extends SmsDevMock
         $this->assertSame('Resposta 1',    $parsedMessages['message']);
     }
 
+    public function testEmptyInbox()
+    {
+        $apiResponse = '[{"situacao":"OK",descricao":"SEM MENSAGENS NA CAIXA DE ENTRADA."}]';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $SmsDev->setDateFormat('Y-m-d H:i:s')->fetch();
+        
+        $this->assertEmpty($SmsDev->parsedMessages());
+    }
+
     public function testWrongApiKey()
     {
         $apiResponse = '{"situacao":"ERRO","codigo":"403","descricao":"NAO AUTENTICADO."}';
