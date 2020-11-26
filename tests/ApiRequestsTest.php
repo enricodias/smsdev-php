@@ -27,6 +27,8 @@ final class ApiRequestsTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock();
 
+        $SmsDev->setNumberValidation(false);
+
         $SmsDev->send('5511988887777', 'Message');
 
         $this->assertSame('/v1/send', $this->getRequestPath());

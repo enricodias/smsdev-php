@@ -31,6 +31,13 @@ class SmsDev
     private $_apiKey = '';
 
     /**
+     * Whether or not to validate phone numbers locally before sending.
+     *
+     * @var bool
+     */
+    private $_numberValidation = true;
+
+    /**
      * API timezone.
      *
      * @object \DateTimeZone
@@ -78,8 +85,6 @@ class SmsDev
      * Send an SMS message.
      * 
      * This method does not guarantee that the recipient received the massage since the message delivery is async.
-     * 
-     * TODO: verify phone number locally.
      *
      * @param int $number Recipient's number.
      * @param string $message SMS message.
@@ -89,6 +94,24 @@ class SmsDev
     {
         $this->_result = [];
 
+        if ($this->_numberValidation === true) {
+            
+            try {
+
+                $number = $this->validatePhoneNumber($number);
+
+            } catch (\Exception $e) {
+
+                return false;
+
+            } catch (\Throwable $e) {
+
+                return false;
+
+            }
+
+        }
+        
         $request = new Request(
             'POST',
             $this->_apiUrl.'/send',
@@ -108,6 +131,17 @@ class SmsDev
         if ($this->_result['situacao'] !== 'OK') return false;
 
         return true;
+    }
+
+    /**
+     * Enables or disables the phone number validation
+     *
+     * @param bool $validate Whether or not to validate phone numbers.
+     * @return void
+     */
+    public function setNumberValidation($validate = true)
+    {
+        $this->_numberValidation = (bool) $validate;
     }
 
     /**
@@ -308,6 +342,39 @@ class SmsDev
     public function getResult()
     {
         return $this->_result;
+    }
+
+    /**
+     * Verifies if a phone number is valid
+     *
+     * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
+     * 
+     * @param int $number Phone number.
+     * @return int A valid mobile phone number.
+     * 
+     * @throws \libphonenumber\NumberParseException If the number is not valid.
+     * @throws \Exception If the number is not a valid brazilian mobile number.
+     */
+    private function validatePhoneNumber($number)
+    {
+        if (class_exists('\libphonenumber\PhoneNumberUtil')) {
+
+            $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
+            $mobilePhoneNumber = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberType::MOBILE;
+
+            $phoneNumberObject = $phoneNumberUtil->parse($number, 'BR');
+
+            if ($phoneNumberUtil->isValidNumber($phoneNumberObject) === false || $phoneNumberUtil->getNumberType($phoneNumberObject) !== $mobilePhoneNumber) {
+
+                throw new \Exception('Invalid phone number.');
+
+            }
+
+            $number = $phoneNumberObject->getCountryCode().$phoneNumberObject->getNationalNumber();
+
+        }
+
+        return (int) $number;
     }
 
     /**

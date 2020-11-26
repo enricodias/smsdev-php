@@ -34,6 +34,8 @@ final class ApiResponseTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock($apiResponse);
 
+        $SmsDev->setNumberValidation(false);
+
         $this->assertSame($expectedResponse, $SmsDev->send($number, $message));
     }
 
@@ -150,6 +152,8 @@ final class ApiResponseTest extends SmsDevMock
         $apiResponse = '{"situacao":"ERRO","codigo":"403","descricao":"NAO AUTENTICADO."}';
 
         $SmsDev = $this->getServiceMock($apiResponse);
+
+        $SmsDev->setNumberValidation(false);
 
         $this->assertSame(false, $SmsDev->send('1188881000', 'Message'));
 
