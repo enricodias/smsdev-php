@@ -31,6 +31,13 @@ class SmsDev
     private $_apiKey = '';
 
     /**
+     * Whether or not to validate phone numbers locally before sending.
+     *
+     * @var bool
+     */
+    private $_numberValidation = true;
+
+    /**
      * API timezone.
      *
      * @object \DateTimeZone
@@ -81,18 +88,17 @@ class SmsDev
      *
      * @param int $number Recipient's number.
      * @param string $message SMS message.
-     * @param bool $skipChecks Whether or not to skip the phone verification.
      * @return bool true if the API accepted the request.
      */
-    public function send($number, $message, $skipChecks = false)
+    public function send($number, $message)
     {
         $this->_result = [];
 
-        if ($skipChecks === false) {
+        if ($this->_numberValidation === true) {
             
             try {
 
-                $number = $this->parsePhoneNumber($number);
+                $number = $this->validatePhoneNumber($number);
 
             } catch (\Exception $e) {
 
@@ -125,6 +131,17 @@ class SmsDev
         if ($this->_result['situacao'] !== 'OK') return false;
 
         return true;
+    }
+
+    /**
+     * Enables or disables the phone number validation
+     *
+     * @param bool $validate Whether or not to validate phone numbers.
+     * @return void
+     */
+    public function setNumberValidation($validate = true)
+    {
+        $this->_numberValidation = (bool) $validate;
     }
 
     /**
@@ -328,7 +345,7 @@ class SmsDev
     }
 
     /**
-     * Parses and verifies if a phone number is valid
+     * Verifies if a phone number is valid
      *
      * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
      * 
@@ -338,7 +355,7 @@ class SmsDev
      * @throws \libphonenumber\NumberParseException If the number is not valid.
      * @throws \Exception If the number is not a valid brazilian mobile number.
      */
-    private function parsePhoneNumber($number)
+    private function validatePhoneNumber($number)
     {
         if (class_exists('\libphonenumber\PhoneNumberUtil')) {
 
