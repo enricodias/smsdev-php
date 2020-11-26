@@ -9,9 +9,6 @@ php:
   - '7.3'
   - '7.4'
 
-before_install:
-  - composer global require hirak/prestissimo
-
 install:
   - composer install
   - composer require giggsey/libphonenumber-for-php
