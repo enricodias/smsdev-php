@@ -78,17 +78,34 @@ class SmsDev
      * Send an SMS message.
      * 
      * This method does not guarantee that the recipient received the massage since the message delivery is async.
-     * 
-     * TODO: verify phone number locally.
      *
      * @param int $number Recipient's number.
      * @param string $message SMS message.
+     * @param bool $skipChecks Whether or not to skip the phone verification.
      * @return bool true if the API accepted the request.
      */
-    public function send($number, $message)
+    public function send($number, $message, $skipChecks = false)
     {
         $this->_result = [];
 
+        if ($skipChecks === false) {
+            
+            try {
+
+                $number = $this->parsePhoneNumber($number);
+
+            } catch (\Exception $e) {
+
+                return false;
+
+            } catch (\Throwable $e) {
+
+                return false;
+
+            }
+
+        }
+        
         $request = new Request(
             'POST',
             $this->_apiUrl.'/send',
@@ -308,6 +325,38 @@ class SmsDev
     public function getResult()
     {
         return $this->_result;
+    }
+
+    /**
+     * Parses and verifies if a phone number is valid
+     *
+     * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
+     * 
+     * @param int $number Phone number.
+     * @return int A valid mobile phone number.
+     * 
+     * @throws \libphonenumber\NumberParseException If the number is not valid.
+     * @throws \Exception If the number is not a valid brazilian mobile number.
+     */
+    private function parsePhoneNumber($number)
+    {
+        if (class_exists('\libphonenumber\PhoneNumberUtil')) {
+
+            $phoneNumberUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+
+            $phoneNumberObject = $phoneNumberUtil->parse($number, 'BR');
+
+            if ($phoneNumberUtil->isValidNumber($phoneNumberObject) === false || $phoneNumberUtil->getNumberType($phoneNumberObject) !== \libphonenumber\PhoneNumberType::MOBILE) {
+
+                throw new \Exception('Invalid phone number.');
+
+            }
+
+            $number = $phoneNumberObject->getCountryCode() . $phoneNumberObject->getNationalNumber();
+
+        }
+
+        return $number;
     }
 
     /**

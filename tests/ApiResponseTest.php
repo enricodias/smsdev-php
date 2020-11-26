@@ -34,7 +34,7 @@ final class ApiResponseTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $this->assertSame($expectedResponse, $SmsDev->send($number, $message));
+        $this->assertSame($expectedResponse, $SmsDev->send($number, $message, true));
     }
 
     /**
@@ -151,7 +151,7 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $this->assertSame(false, $SmsDev->send('1188881000', 'Message'));
+        $this->assertSame(false, $SmsDev->send('1188881000', 'Message', true));
 
         $this->assertSame(false, $SmsDev->fetch());
     }
