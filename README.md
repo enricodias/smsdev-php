@@ -41,6 +41,17 @@ var_dump($SmsDev->getResult()); // Returns the raw API response.
 
 The country code optional. The default is 55 (Brazil).
 
+#### Phone number validation
+
+If you have the package [giggsey/libphonenumber-for-php](https://github.com/giggsey/libphonenumber-for-php) installed, it will be used to validate numbers locally. You can disable this feature with the method ```setNumberValidation``` before sending:
+
+```php
+$SmsDev->setNumberValidation(false); // disables phone number validation
+```
+
+Note that SmsDev will charge you for messages sent to invalid numbers.
+
+
 ### Receiving SMS messages
 
 Get unread messages in a specific date interval:
@@ -119,6 +130,5 @@ This class solves this problem by automatically correcting dates both in search 
 
 ## TODO
 
--    Verify phone number locally.
 -    Check the status of sent messages.
 -    Send multiple SMS messages.
