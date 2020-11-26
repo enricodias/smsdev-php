@@ -359,21 +359,22 @@ class SmsDev
     {
         if (class_exists('\libphonenumber\PhoneNumberUtil')) {
 
-            $phoneNumberUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+            $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
+            $mobilePhoneNumber = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberType::MOBILE;
 
             $phoneNumberObject = $phoneNumberUtil->parse($number, 'BR');
 
-            if ($phoneNumberUtil->isValidNumber($phoneNumberObject) === false || $phoneNumberUtil->getNumberType($phoneNumberObject) !== \libphonenumber\PhoneNumberType::MOBILE) {
+            if ($phoneNumberUtil->isValidNumber($phoneNumberObject) === false || $phoneNumberUtil->getNumberType($phoneNumberObject) !== $mobilePhoneNumber) {
 
                 throw new \Exception('Invalid phone number.');
 
             }
 
-            $number = $phoneNumberObject->getCountryCode() . $phoneNumberObject->getNationalNumber();
+            $number = $phoneNumberObject->getCountryCode().$phoneNumberObject->getNationalNumber();
 
         }
 
-        return $number;
+        return (int) $number;
     }
 
     /**
