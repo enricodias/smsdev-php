@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file, in reverse 
 #### Added
 
 - Add a Changelog
+- Add a Code of Conduct
 
 ## 0.3
 
