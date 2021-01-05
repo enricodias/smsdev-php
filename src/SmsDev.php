@@ -88,9 +88,10 @@ class SmsDev
      *
      * @param int $number Recipient's number.
      * @param string $message SMS message.
+     * @param string $refer  Optional. User reference for message identification.
      * @return bool true if the API accepted the request.
      */
-    public function send($number, $message)
+    public function send($number, $message, $refer = null)
     {
         $this->_result = [];
 
@@ -111,19 +112,23 @@ class SmsDev
             }
 
         }
-        
+
+        $params = [
+            'key'    => $this->_apiKey,
+            'type'   => 9,
+            'number' => $number,
+            'msg'    => $message,
+        ];
+
+        if ($refer) $params['refer'] = $refer;
+
         $request = new Request(
             'POST',
             $this->_apiUrl.'/send',
             [
                 'Accept' => 'application/json',
             ],
-            json_encode([
-                'key'    => $this->_apiKey,
-                'type'   => 9,
-                'number' => $number,
-                'msg'    => $message,
-            ])
+            json_encode($params)
         );
 
         if ($this->makeRequest($request) === false) return false;
