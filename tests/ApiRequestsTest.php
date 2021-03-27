@@ -41,6 +41,25 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals('Message',       $query->msg);
     }
 
+    public function testSendWithRefer()
+    {
+        $SmsDev = $this->getServiceMock();
+
+        $SmsDev->setNumberValidation(false);
+
+        $SmsDev->send('5511988887777', 'Message', 'Refer string');
+
+        $this->assertSame('/v1/send', $this->getRequestPath());
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('',              $query->key);
+        $this->assertEquals('9',             $query->type);
+        $this->assertEquals('5511988887777', $query->number);
+        $this->assertEquals('Message',       $query->msg);
+        $this->assertEquals('Refer string',  $query->refer);
+    }
+
     public function testFilterByUnread()
     {
         $SmsDev = $this->getServiceMock();

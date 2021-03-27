@@ -30,13 +30,17 @@ final class ApiResponseTest extends SmsDevMock
     /**
      * @dataProvider sendDataProvider
      */
-    public function testSend($number, $message, $expectedResponse, $apiResponse)
+    public function testSend($number, $message, $refer, $expectedResponse, $apiResponse)
     {
         $SmsDev = $this->getServiceMock($apiResponse);
 
         $SmsDev->setNumberValidation(false);
 
-        $this->assertSame($expectedResponse, $SmsDev->send($number, $message));
+        if ($refer) {
+            $this->assertSame($expectedResponse, $SmsDev->send($number, $message, $refer));
+        } else {
+            $this->assertSame($expectedResponse, $SmsDev->send($number, $message));
+        }
     }
 
     /**
@@ -46,13 +50,19 @@ final class ApiResponseTest extends SmsDevMock
     {
         return [
 
-            // number,         message,     expectedResponse,   apiResponse
-            [ '1188881000',   'Message',    true,               '{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }' ],
-            [ '1188881000',   '',           false,              '{"situacao":"ERRO","codigo":"400","descricao":"MENSAGEM NAO DEFINIDA."}' ],
-            [ '118888100',    'Message',    true,               '{"situacao":"OK","codigo":"1","id":"645106333","descricao":"MENSAGEM NA FILA"}' ],
-            [ '11888810009',  'Message',    true,               '{"situacao":"OK","codigo":"1","id":"645106334","descricao":"MENSAGEM NA FILA"}' ],
-            [ 'abc',          'Message',    false,              '{"situacao":"ERRO","codigo":"402","descricao":"SEM NUMERO DESTINATARIO."}' ],
-            [ '',             'Message',    false,              '{"situacao":"ERRO","codigo":"402","descricao":"SEM NUMERO DESTINATARIO."}' ],
+            // number,         message,     refer       expectedResponse,   apiResponse
+            [ '1188881000',   'Message',    null,       true,               '{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }' ],
+            [ '1188881000',   '',           null,       false,              '{"situacao":"ERRO","codigo":"400","descricao":"MENSAGEM NAO DEFINIDA."}' ],
+            [ '118888100',    'Message',    null,       true,               '{"situacao":"OK","codigo":"1","id":"645106333","descricao":"MENSAGEM NA FILA"}' ],
+            [ '11888810009',  'Message',    null,       true,               '{"situacao":"OK","codigo":"1","id":"645106334","descricao":"MENSAGEM NA FILA"}' ],
+            [ 'abc',          'Message',    null,       false,              '{"situacao":"ERRO","codigo":"402","descricao":"SEM NUMERO DESTINATARIO."}' ],
+            [ '',             'Message',    null,       false,              '{"situacao":"ERRO","codigo":"402","descricao":"SEM NUMERO DESTINATARIO."}' ],
+            [ '1188881000',   'Message',    'Refer',    true,               '{"situacao": "OK", "codigo": "1", "id": "637849052", "refer": "Refer", "descricao": "MENSAGEM NA FILA"}' ],
+            [ '1188881000',   '',           'Refer',    false,              '{"situacao":"ERRO","codigo":"400","refer": "Refer","descricao":"MENSAGEM NAO DEFINIDA."}' ],
+            [ '118888100',    'Message',    'Refer',    true,               '{"situacao":"OK","codigo":"1","id":"645106333","refer": "Refer","descricao":"MENSAGEM NA FILA"}' ],
+            [ '11888810009',  'Message',    'Refer',    true,               '{"situacao":"OK","codigo":"1","id":"645106334","refer": "Refer","descricao":"MENSAGEM NA FILA"}' ],
+            [ 'abc',          'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}' ],
+            [ '',             'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}'],   
 
         ];
     }
