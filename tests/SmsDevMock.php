@@ -38,9 +38,9 @@ abstract class SmsDevMock extends TestCase
         $stub = $this->getMockBuilder(SmsDev::class)
             ->setMethods(['getGuzzleClient'])
             ->getMock();
-        
+
         $stub->method('getGuzzleClient')->willReturn($client);
-        
+
         return $stub;
     }
 

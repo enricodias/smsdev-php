@@ -51,7 +51,6 @@ $SmsDev->setNumberValidation(false); // disables phone number validation
 
 Note that SmsDev will charge you for messages sent to invalid numbers.
 
-
 ### Receiving SMS messages
 
 Get unread messages in a specific date interval:
@@ -130,5 +129,5 @@ This class solves this problem by automatically correcting dates both in search 
 
 ## TODO
 
--    Check the status of sent messages.
--    Send multiple SMS messages.
+- Check the status of sent messages.
+- Send multiple SMS messages.

@@ -4,7 +4,7 @@ namespace enricodias\SmsDev\Tests;
 
 /**
  * Test if the requests sent are compatible with the API specification.
- * 
+ *
  * @see https://www.smsdev.com.br/ SMSDev API specification.
  */
 final class ApiRequestsTest extends SmsDevMock
@@ -86,7 +86,7 @@ final class ApiRequestsTest extends SmsDevMock
                 ->fetch();
 
         $this->assertSame('/v1/inbox', $this->getRequestPath());
-        
+
         $query = $this->getRequestBody();
 
         $this->assertEquals('',        $query->key);
@@ -123,11 +123,11 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertSame('/v1/inbox', $this->getRequestPath());
 
         $query = $this->getRequestBody();
-        
+
         $this->assertEquals('', $query->key);
         $this->assertObjectNotHasAttribute('date_from', $query);
         $this->assertEquals('19/01/2019', $query->date_to);
-        
+
         $SmsDev = $this->getServiceMock();
 
         $SmsDev->setDateFormat('Y-m-d')
@@ -179,7 +179,7 @@ final class ApiRequestsTest extends SmsDevMock
 
     /**
      * Test the timezone calculations in the date filters.
-     * 
+     *
      * Example: 2020-01-02 01:00:00 should be day 2020-01-01 in America/Sao_Paulo
      */
     public function testTimezoneDate()
