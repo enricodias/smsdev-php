@@ -7,11 +7,11 @@ use GuzzleHttp\Psr7\Request;
 
 /**
  * SmsDev
- * 
+ *
  * Send and receive SMS using SmsDev.com.br
- * 
+ *
  * @see https://www.smsdev.com.br/ SMSDev API.
- * 
+ *
  * @author Enrico Dias <enrico@enricodias.com>
  */
 class SmsDev
@@ -55,7 +55,7 @@ class SmsDev
      * Query string to be sent to the API as a search filter.
      *
      * The default 'status' = 1 will return all received messages.
-     * 
+     *
      * @var array
      */
     private $_query = [
@@ -83,7 +83,7 @@ class SmsDev
 
     /**
      * Send an SMS message.
-     * 
+     *
      * This method does not guarantee that the recipient received the massage since the message delivery is async.
      *
      * @param int $number Recipient's number.
@@ -96,7 +96,7 @@ class SmsDev
         $this->_result = [];
 
         if ($this->_numberValidation === true) {
-            
+
             try {
 
                 $number = $this->validatePhoneNumber($number);
@@ -239,7 +239,7 @@ class SmsDev
 
     /**
      * Query the API for received messages using search filters.
-     * 
+     *
      * @see SmsDev::$_query Search filters.
      * @see SmsDev::$_result API response.
      *
@@ -274,11 +274,11 @@ class SmsDev
 
     /**
      * Parse the received messages in a more useful format with the fields date, number and message.
-     * 
+     *
      * The dates received by the API are converted to SmsDev::$_dateFormat.
      *
      * @see SmsDev::$_dateFormat Date format to be used in all date functions.
-     * 
+     *
      * @return array List of received messages.
      */
     public function parsedMessages()
@@ -341,7 +341,7 @@ class SmsDev
      * Get the raw API response from the last response received.
      *
      * @see SmsDev::$_result Raw API response.
-     * 
+     *
      * @return array Raw API response.
      */
     public function getResult()
@@ -353,10 +353,10 @@ class SmsDev
      * Verifies if a phone number is valid
      *
      * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
-     * 
+     *
      * @param int $number Phone number.
      * @return int A valid mobile phone number.
-     * 
+     *
      * @throws \libphonenumber\NumberParseException If the number is not valid.
      * @throws \Exception If the number is not a valid brazilian mobile number.
      */
@@ -384,12 +384,12 @@ class SmsDev
 
     /**
      * Convert a date to format supported by the API.
-     * 
+     *
      * The API requires the date format d/m/Y, but in this class any valid date format is supported.
      * Since the API is always using the timezone America/Sao_Paulo, this function must also do timezone conversions.
      *
      * @see SmsDev::$_dateFormat Date format to be used in all date functions.
-     * 
+     *
      * @param string $key The filter key to be set as a search filter.
      * @param string $date A valid date format.
      * @return SmsDev Return itself for chaining.
@@ -399,7 +399,7 @@ class SmsDev
         $parsedDate = \DateTime::createFromFormat($this->_dateFormat, $date);
 
         if ($parsedDate !== false) {
-            
+
             $parsedDate->setTimezone($this->_apiTimeZone);
 
             $this->_query[$key] = $parsedDate->format('d/m/Y');
@@ -424,13 +424,13 @@ class SmsDev
             $response = $client->send($request);
 
         } catch (\Exception $e) {
-            
+
             return false;
-            
+
         }
 
         $response = json_decode($response->getBody(), true);
-        
+
         if (json_last_error() != JSON_ERROR_NONE || is_array($response) === false) return false;
 
         $this->_result = $response;
@@ -443,7 +443,7 @@ class SmsDev
      * This method is needed to test API calls in unit tests.
      *
      * @return object GuzzleHttp\Client instance.
-     * 
+     *
      * @codeCoverageIgnore
      */
     protected function getGuzzleClient()

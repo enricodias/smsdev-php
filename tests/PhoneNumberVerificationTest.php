@@ -4,7 +4,7 @@ namespace enricodias\SmsDev\Tests;
 
 /**
  * Test the optional phone number verification
- * 
+ *
  * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
  */
 final class PhoneNumberVerificationTest extends SmsDevMock

@@ -4,7 +4,7 @@ namespace enricodias\SmsDev\Tests;
 
 /**
  * Test if the class can parse the API responses correctly.
- * 
+ *
  * @see https://www.smsdev.com.br/ SMSDev API specification.
  */
 final class ApiResponseTest extends SmsDevMock
@@ -62,7 +62,7 @@ final class ApiResponseTest extends SmsDevMock
             [ '118888100',    'Message',    'Refer',    true,               '{"situacao":"OK","codigo":"1","id":"645106333","refer": "Refer","descricao":"MENSAGEM NA FILA"}' ],
             [ '11888810009',  'Message',    'Refer',    true,               '{"situacao":"OK","codigo":"1","id":"645106334","refer": "Refer","descricao":"MENSAGEM NA FILA"}' ],
             [ 'abc',          'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}' ],
-            [ '',             'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}'],   
+            [ '',             'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}'],
 
         ];
     }
@@ -79,7 +79,7 @@ final class ApiResponseTest extends SmsDevMock
             ->fetch();
 
         $parsedMessages = current($SmsDev->parsedMessages());
-        
+
         $this->assertSame('2018-01-19 13:35:14', $parsedMessages['date']); // UTC conversion
         $this->assertSame('5511988887777',       $parsedMessages['number']);
         $this->assertSame('Resposta',            $parsedMessages['message']);
@@ -102,7 +102,7 @@ final class ApiResponseTest extends SmsDevMock
     public function testFilterById()
     {
         $apiResponse = '[{"situacao":"OK","data_read":"19\/01\/2018 11:35:14","telefone":"5511988887777","id":"","refer_id":"","nome":"","msg_sent":"","id_sms_read":"2515974","descricao":"Resposta"}]';
-        
+
         $SmsDev = $this->getServiceMock($apiResponse);
 
         $SmsDev->setFilter()
@@ -110,7 +110,7 @@ final class ApiResponseTest extends SmsDevMock
                 ->fetch();
 
         $result = current($SmsDev->getResult());
-        
+
         $this->assertSame(2515974, (int)$result['id_sms_read']);
     }
 
@@ -123,7 +123,7 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev->setFilter()
                     ->byId(2515974)
                 ->fetch();
-        
+
         $this->assertEmpty($SmsDev->parsedMessages());
     }
 
@@ -140,7 +140,7 @@ final class ApiResponseTest extends SmsDevMock
             ->fetch();
 
         $parsedMessages = current($SmsDev->parsedMessages());
-        
+
         $this->assertSame('1529418914',    $parsedMessages['date']);
         $this->assertSame('5511988887777', $parsedMessages['number']);
         $this->assertSame('Resposta 1',    $parsedMessages['message']);
@@ -153,7 +153,7 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev = $this->getServiceMock($apiResponse);
 
         $SmsDev->setDateFormat('Y-m-d H:i:s')->fetch();
-        
+
         $this->assertEmpty($SmsDev->parsedMessages());
     }
 
