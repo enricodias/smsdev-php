@@ -4,10 +4,15 @@ All notable changes to this project will be documented in this file, in reverse 
 
 ## Unreleased
 
+## 0.4
+
+_Released: 2022-06-01_
 #### Added
 
 - Add a Changelog
 - Add a Code of Conduct
+- Add support for the 'refer' parameter
+- Add support for guzzle v7.4
 
 ## 0.3
 
