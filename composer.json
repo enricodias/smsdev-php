@@ -32,6 +32,6 @@
     },
     "require-dev": {
         "phpunit/phpunit": ">5.7 <10",
-        "scrutinizer/ocular": "^1.6"
+        "scrutinizer/ocular": "1.7.*"
     }
 }
