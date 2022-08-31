@@ -6,26 +6,22 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Request;
 
 /**
- * SmsDev
+ * SmsDev.
  *
  * Send and receive SMS using SmsDev.com.br
  *
- * @see https://www.smsdev.com.br/ SMSDev API.
+ * @see https://www.smsdev.com.br/
  *
  * @author Enrico Dias <enrico@enricodias.com>
  */
 class SmsDev
 {
     /**
-     * API url.
-     *
      * @var string
      */
     private $_apiUrl = 'https://api.smsdev.com.br/v1';
 
     /**
-     * API key.
-     *
      * @var string
      */
     private $_apiKey = '';
@@ -38,9 +34,7 @@ class SmsDev
     private $_numberValidation = true;
 
     /**
-     * API timezone.
-     *
-     * @object \DateTimeZone
+     * @var \DateTimeZone
      */
     private $_apiTimeZone;
 
@@ -63,7 +57,7 @@ class SmsDev
     ];
 
     /**
-     * Raw API response/
+     * Raw API response.
      *
      * @var array
      */
@@ -86,9 +80,10 @@ class SmsDev
      *
      * This method does not guarantee that the recipient received the massage since the message delivery is async.
      *
-     * @param int $number Recipient's number.
-     * @param string $message SMS message.
-     * @param string $refer  Optional. User reference for message identification.
+     * @param int $number
+     * @param string $message
+     * @param string $refer (optional) User reference for message identification.
+     *
      * @return bool true if the API accepted the request.
      */
     public function send($number, $message, $refer = null)
@@ -139,21 +134,22 @@ class SmsDev
     }
 
     /**
-     * Enables or disables the phone number validation
+     * Enables or disables the phone number validation.
      *
-     * @param bool $validate Whether or not to validate phone numbers.
+     * @param bool $shouldValidate
+     *
      * @return void
      */
-    public function setNumberValidation($validate = true)
+    public function setNumberValidation($shouldValidate = true)
     {
-        $this->_numberValidation = (bool) $validate;
+        $this->_numberValidation = (bool) $shouldValidate;
     }
 
     /**
      * Sets the date format to be used in all date functions.
      *
      * @param string $dateFormat A valid date format (ex: Y-m-d).
-     * @return SmsDev Return itself for chaining.
+     * @return SmsDev
      */
     public function setDateFormat($dateFormat)
     {
@@ -165,7 +161,7 @@ class SmsDev
     /**
      * Resets the search filter.
      *
-     * @return SmsDev Return itself for chaining.
+     * @return SmsDev
      */
     public function setFilter()
     {
@@ -179,7 +175,7 @@ class SmsDev
     /**
      * Sets the search filter to return unread messages only.
      *
-     * @return SmsDev Return itself for chaining.
+     * @return SmsDev
      */
     public function isUnread()
     {
@@ -191,8 +187,9 @@ class SmsDev
     /**
      * Sets the search filter to return a message with a specific id.
      *
-     * @param int $id Message id.
-     * @return SmsDev Return itself for chaining.
+     * @param int $id
+     *
+     * @return SmsDev
      */
     public function byId($id)
     {
@@ -206,8 +203,9 @@ class SmsDev
     /**
      * Sets the search filter to return messages older than a specific date.
      *
-     * @param string $date A valid date.
-     * @return SmsDev Return itself for chaining.
+     * @param string $date
+     *
+     * @return SmsDev
      */
     public function dateFrom($date)
     {
@@ -217,8 +215,9 @@ class SmsDev
     /**
      * Sets the search filter to return messages newer than a specific date.
      *
-     * @param string $date A valid date.
-     * @return SmsDev Return itself for chaining.
+     * @param string $date
+     *
+     * @return SmsDev
      */
     public function dateTo($date)
     {
@@ -228,9 +227,10 @@ class SmsDev
     /**
      * Sets the search filter to return messages between a specific date interval.
      *
-     * @param string $dateFrom Minimum date.
-     * @param string $dateTo Maximum date.
-     * @return SmsDev Return itself for chaining.
+     * @param string $dateFrom
+     * @param string $dateTo
+     *
+     * @return SmsDev
      */
     public function dateBetween($dateFrom, $dateTo)
     {
@@ -243,7 +243,7 @@ class SmsDev
      * @see SmsDev::$_query Search filters.
      * @see SmsDev::$_result API response.
      *
-     * @return bool True if the request if the API response is valid.
+     * @return bool True if the request was successful.
      */
     public function fetch()
     {
@@ -350,11 +350,12 @@ class SmsDev
     }
 
     /**
-     * Verifies if a phone number is valid
+     * Verifies if a phone number is valid.
      *
      * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
      *
-     * @param int $number Phone number.
+     * @param int $number
+     *
      * @return int A valid mobile phone number.
      *
      * @throws \libphonenumber\NumberParseException If the number is not valid.
@@ -391,8 +392,9 @@ class SmsDev
      * @see SmsDev::$_dateFormat Date format to be used in all date functions.
      *
      * @param string $key The filter key to be set as a search filter.
-     * @param string $date A valid date format.
-     * @return SmsDev Return itself for chaining.
+     * @param string $date
+     *
+     * @return SmsDev
      */
     private function parseDate($key, $date)
     {
@@ -412,8 +414,9 @@ class SmsDev
     /**
      * Sends a request to the smsdev.com.br API.
      *
-     * @param \GuzzleHttp\Psr7\Request $request Request object.
-     * @return bool True if the API response is valid.
+     * @param \GuzzleHttp\Psr7\Request $request
+     *
+     * @return bool
      */
     private function makeRequest($request)
     {
@@ -442,7 +445,7 @@ class SmsDev
      * Creates GuzzleHttp\Client to be used in API requests.
      * This method is needed to test API calls in unit tests.
      *
-     * @return object GuzzleHttp\Client instance.
+     * @return object \GuzzleHttp\Client
      *
      * @codeCoverageIgnore
      */
