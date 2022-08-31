@@ -36,11 +36,7 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev->setNumberValidation(false);
 
-        if ($refer) {
-            $this->assertSame($expectedResponse, $SmsDev->send($number, $message, $refer));
-        } else {
-            $this->assertSame($expectedResponse, $SmsDev->send($number, $message));
-        }
+        $this->assertSame($expectedResponse, $SmsDev->send($number, $message, $refer));
     }
 
     /**
