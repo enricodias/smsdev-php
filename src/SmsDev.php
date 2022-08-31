@@ -19,31 +19,31 @@ class SmsDev
     /**
      * @var string
      */
-    private $_apiUrl = 'https://api.smsdev.com.br/v1';
+    private $apiUrl = 'https://api.smsdev.com.br/v1';
 
     /**
      * @var string
      */
-    private $_apiKey = '';
+    private $apiKey = '';
 
     /**
      * Whether or not to validate phone numbers locally before sending.
      *
      * @var bool
      */
-    private $_numberValidation = true;
+    private $numberValidation = true;
 
     /**
      * @var \DateTimeZone
      */
-    private $_apiTimeZone;
+    private $apiTimeZone;
 
     /**
      * Date format to be used in all date functions.
      *
      * @var string
      */
-    private $_dateFormat = 'U';
+    private $dateFormat = 'U';
 
     /**
      * Query string to be sent to the API as a search filter.
@@ -52,7 +52,7 @@ class SmsDev
      *
      * @var array
      */
-    private $_query = [
+    private $query = [
         'status' => 1
     ];
 
@@ -70,9 +70,9 @@ class SmsDev
      */
     public function __construct($apiKey = '')
     {
-        $this->_apiKey = $apiKey;
+        $this->apiKey = $apiKey;
 
-        $this->_apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
+        $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
     }
 
     /**
@@ -90,7 +90,7 @@ class SmsDev
     {
         $this->_result = [];
 
-        if ($this->_numberValidation === true) {
+        if ($this->numberValidation === true) {
             try {
                 $number = $this->validatePhoneNumber($number);
             } catch (\Exception $e) {
@@ -101,7 +101,7 @@ class SmsDev
         }
 
         $params = [
-            'key'    => $this->_apiKey,
+            'key'    => $this->apiKey,
             'type'   => 9,
             'number' => $number,
             'msg'    => $message,
@@ -111,7 +111,7 @@ class SmsDev
 
         $request = new Request(
             'POST',
-            $this->_apiUrl.'/send',
+            $this->apiUrl.'/send',
             [
                 'Accept' => 'application/json',
             ],
@@ -134,7 +134,7 @@ class SmsDev
      */
     public function setNumberValidation($shouldValidate = true)
     {
-        $this->_numberValidation = (bool) $shouldValidate;
+        $this->numberValidation = (bool) $shouldValidate;
     }
 
     /**
@@ -145,7 +145,7 @@ class SmsDev
      */
     public function setDateFormat($dateFormat)
     {
-        $this->_dateFormat = $dateFormat;
+        $this->dateFormat = $dateFormat;
 
         return $this;
     }
@@ -157,7 +157,7 @@ class SmsDev
      */
     public function setFilter()
     {
-        $this->_query = [
+        $this->query = [
             'status' => 1,
         ];
 
@@ -171,7 +171,7 @@ class SmsDev
      */
     public function isUnread()
     {
-        $this->_query['status'] = 0;
+        $this->query['status'] = 0;
 
         return $this;
     }
@@ -188,7 +188,7 @@ class SmsDev
         $id = \intval($id);
 
         if ($id > 0) {
-            $this->_query['id'] = $id;
+            $this->query['id'] = $id;
         }
 
         return $this;
@@ -234,7 +234,7 @@ class SmsDev
     /**
      * Query the API for received messages using search filters.
      *
-     * @see SmsDev::$_query Search filters.
+     * @see SmsDev::$query Search filters.
      * @see SmsDev::$_result API response.
      *
      * @return bool True if the request was successful.
@@ -243,16 +243,16 @@ class SmsDev
     {
         $this->_result = [];
 
-        $this->_query['key'] = $this->_apiKey;
+        $this->query['key'] = $this->apiKey;
 
         $request = new Request(
             'GET',
-            $this->_apiUrl.'/inbox',
+            $this->apiUrl.'/inbox',
             [
                 'Accept' => 'application/json',
             ],
             json_encode(
-                $this->_query
+                $this->query
             )
         );
 
@@ -273,9 +273,9 @@ class SmsDev
     /**
      * Parse the received messages in a more useful format with the fields date, number and message.
      *
-     * The dates received by the API are converted to SmsDev::$_dateFormat.
+     * The dates received by the API are converted to SmsDev::$dateFormat.
      *
-     * @see SmsDev::$_dateFormat Date format to be used in all date functions.
+     * @see SmsDev::$dateFormat Date format to be used in all date functions.
      *
      * @return array List of received messages.
      */
@@ -291,12 +291,12 @@ class SmsDev
             }
 
             $id = $result['id_sms_read'];
-            $date = \DateTime::createFromFormat('d/m/Y H:i:s', $result['data_read'], $this->_apiTimeZone);
+            $date = \DateTime::createFromFormat('d/m/Y H:i:s', $result['data_read'], $this->apiTimeZone);
 
             $date->setTimezone($localTimeZone);
 
             $messages[$id] = [
-                'date'    => $date->format($this->_dateFormat),
+                'date'    => $date->format($this->dateFormat),
                 'number'  => $result['telefone'],
                 'message' => $result['descricao'],
             ];
@@ -316,12 +316,12 @@ class SmsDev
 
         $request = new Request(
             'GET',
-            $this->_apiUrl.'/balance',
+            $this->apiUrl.'/balance',
             [
                 'Accept' => 'application/json',
             ],
             \json_encode([
-                'key'    => $this->_apiKey,
+                'key'    => $this->apiKey,
                 'action' => 'saldo',
             ])
         );
@@ -383,7 +383,7 @@ class SmsDev
      * The API requires the date format d/m/Y, but in this class any valid date format is supported.
      * Since the API is always using the timezone America/Sao_Paulo, this function must also do timezone conversions.
      *
-     * @see SmsDev::$_dateFormat Date format to be used in all date functions.
+     * @see SmsDev::$dateFormat Date format to be used in all date functions.
      *
      * @param string $key The filter key to be set as a search filter.
      * @param string $date
@@ -392,12 +392,12 @@ class SmsDev
      */
     private function parseDate($key, $date)
     {
-        $parsedDate = \DateTime::createFromFormat($this->_dateFormat, $date);
+        $parsedDate = \DateTime::createFromFormat($this->dateFormat, $date);
 
         if ($parsedDate !== false) {
-            $parsedDate->setTimezone($this->_apiTimeZone);
+            $parsedDate->setTimezone($this->apiTimeZone);
 
-            $this->_query[$key] = $parsedDate->format('d/m/Y');
+            $this->query[$key] = $parsedDate->format('d/m/Y');
         }
 
         return $this;
