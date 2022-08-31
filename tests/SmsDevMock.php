@@ -12,7 +12,7 @@ abstract class SmsDevMock extends TestCase
 
     public function getServiceMock($apiResponse = '')
     {
-        date_default_timezone_set('UTC');
+        \date_default_timezone_set('UTC');
 
         $this->_container = [];
 
@@ -51,6 +51,6 @@ abstract class SmsDevMock extends TestCase
 
     public function getRequestBody()
     {
-        return json_decode($this->_container[0]['request']->getBody()->getContents());
+        return \json_decode($this->_container[0]['request']->getBody()->getContents());
     }
 }

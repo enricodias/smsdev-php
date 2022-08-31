@@ -115,7 +115,7 @@ class SmsDev
             [
                 'Accept' => 'application/json',
             ],
-            json_encode($params)
+            \json_encode($params)
         );
 
         if ($this->makeRequest($request) === false || $this->_result['situacao'] !== 'OK') {
@@ -185,7 +185,7 @@ class SmsDev
      */
     public function byId($id)
     {
-        $id = intval($id);
+        $id = \intval($id);
 
         if ($id > 0) {
             $this->_query['id'] = $id;
@@ -263,7 +263,7 @@ class SmsDev
         // resets the filters
         $this->setFilter();
 
-        if (is_array($this->_result)) {
+        if (\is_array($this->_result) === true) {
             return true;
         }
 
@@ -281,12 +281,12 @@ class SmsDev
      */
     public function parsedMessages()
     {
-        $localTimeZone = new \DateTimeZone(date_default_timezone_get());
+        $localTimeZone = new \DateTimeZone(\date_default_timezone_get());
 
         $messages = [];
 
         foreach ($this->_result as $key => $result) {
-            if (is_array($result) === false || array_key_exists('id_sms_read', $result) === false) {
+            if (\is_array($result) === false || \array_key_exists('id_sms_read', $result) === false) {
                 continue;
             }
 
@@ -320,7 +320,7 @@ class SmsDev
             [
                 'Accept' => 'application/json',
             ],
-            json_encode([
+            \json_encode([
                 'key'    => $this->_apiKey,
                 'action' => 'saldo',
             ])
@@ -328,7 +328,7 @@ class SmsDev
 
         $this->makeRequest($request);
 
-        if (array_key_exists('saldo_sms', $this->_result) === false) {
+        if (\array_key_exists('saldo_sms', $this->_result) === false) {
             return 0;
         }
 
@@ -361,7 +361,7 @@ class SmsDev
      */
     private function validatePhoneNumber($number)
     {
-        if (class_exists('\libphonenumber\PhoneNumberUtil')) {
+        if (\class_exists('\libphonenumber\PhoneNumberUtil')) {
             $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
             $mobilePhoneNumber = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberType::MOBILE;
 
@@ -420,9 +420,9 @@ class SmsDev
             return false;
         }
 
-        $response = json_decode($response->getBody(), true);
+        $response = \json_decode($response->getBody(), true);
 
-        if (json_last_error() != JSON_ERROR_NONE || is_array($response) === false) {
+        if (\json_last_error() !== JSON_ERROR_NONE || \is_array($response) === false) {
             return false;
         }
 

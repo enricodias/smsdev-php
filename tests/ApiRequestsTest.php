@@ -186,7 +186,7 @@ final class ApiRequestsTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock();
 
-        date_default_timezone_set('UTC');
+        \date_default_timezone_set('UTC');
 
         $SmsDev->setDateFormat('Y-m-d H:i:s')
             ->setFilter()
