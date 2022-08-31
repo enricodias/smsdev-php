@@ -49,7 +49,6 @@ final class ApiResponseTest extends SmsDevMock
     public function sendDataProvider()
     {
         return [
-
             // number,         message,     refer       expectedResponse,   apiResponse
             [ '1188881000',   'Message',    null,       true,               '{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }' ],
             [ '1188881000',   '',           null,       false,              '{"situacao":"ERRO","codigo":"400","descricao":"MENSAGEM NAO DEFINIDA."}' ],
@@ -63,7 +62,6 @@ final class ApiResponseTest extends SmsDevMock
             [ '11888810009',  'Message',    'Refer',    true,               '{"situacao":"OK","codigo":"1","id":"645106334","refer": "Refer","descricao":"MENSAGEM NA FILA"}' ],
             [ 'abc',          'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}' ],
             [ '',             'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}'],
-
         ];
     }
 
@@ -166,7 +164,6 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev->setNumberValidation(false);
 
         $this->assertSame(false, $SmsDev->send('1188881000', 'Message'));
-
         $this->assertSame(false, $SmsDev->fetch());
     }
 }

@@ -91,21 +91,13 @@ class SmsDev
         $this->_result = [];
 
         if ($this->_numberValidation === true) {
-
             try {
-
                 $number = $this->validatePhoneNumber($number);
-
             } catch (\Exception $e) {
-
                 return false;
-
             } catch (\Throwable $e) {
-
                 return false;
-
             }
-
         }
 
         $params = [
@@ -126,9 +118,9 @@ class SmsDev
             json_encode($params)
         );
 
-        if ($this->makeRequest($request) === false) return false;
-
-        if ($this->_result['situacao'] !== 'OK') return false;
+        if ($this->makeRequest($request) === false || $this->_result['situacao'] !== 'OK') {
+            return false;
+        }
 
         return true;
     }
@@ -166,7 +158,7 @@ class SmsDev
     public function setFilter()
     {
         $this->_query = [
-            'status' => 1
+            'status' => 1,
         ];
 
         return $this;
@@ -195,7 +187,9 @@ class SmsDev
     {
         $id = intval($id);
 
-        if ($id > 0) $this->_query['id'] = $id;
+        if ($id > 0) {
+            $this->_query['id'] = $id;
+        }
 
         return $this;
     }
@@ -262,12 +256,16 @@ class SmsDev
             )
         );
 
-        if ($this->makeRequest($request) === false) return false;
+        if ($this->makeRequest($request) === false) {
+            return false;
+        }
 
         // resets the filters
         $this->setFilter();
 
-        if (is_array($this->_result)) return true;
+        if (is_array($this->_result)) {
+            return true;
+        }
 
         return false;
     }
@@ -288,10 +286,9 @@ class SmsDev
         $messages = [];
 
         foreach ($this->_result as $key => $result) {
-
-            if (is_array($result) === false) continue;
-
-            if (is_array($result) === false || array_key_exists('id_sms_read', $result) === false) continue;
+            if (is_array($result) === false || array_key_exists('id_sms_read', $result) === false) {
+                continue;
+            }
 
             $id = $result['id_sms_read'];
             $date = \DateTime::createFromFormat('d/m/Y H:i:s', $result['data_read'], $this->_apiTimeZone);
@@ -303,7 +300,6 @@ class SmsDev
                 'number'  => $result['telefone'],
                 'message' => $result['descricao'],
             ];
-
         }
 
         return $messages;
@@ -332,7 +328,9 @@ class SmsDev
 
         $this->makeRequest($request);
 
-        if (array_key_exists('saldo_sms', $this->_result) === false) return 0;
+        if (array_key_exists('saldo_sms', $this->_result) === false) {
+            return 0;
+        }
 
         return (int) $this->_result['saldo_sms'];
     }
@@ -364,20 +362,16 @@ class SmsDev
     private function validatePhoneNumber($number)
     {
         if (class_exists('\libphonenumber\PhoneNumberUtil')) {
-
             $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
             $mobilePhoneNumber = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberType::MOBILE;
 
             $phoneNumberObject = $phoneNumberUtil->parse($number, 'BR');
 
             if ($phoneNumberUtil->isValidNumber($phoneNumberObject) === false || $phoneNumberUtil->getNumberType($phoneNumberObject) !== $mobilePhoneNumber) {
-
                 throw new \Exception('Invalid phone number.');
-
             }
 
             $number = $phoneNumberObject->getCountryCode().$phoneNumberObject->getNationalNumber();
-
         }
 
         return (int) $number;
@@ -401,11 +395,9 @@ class SmsDev
         $parsedDate = \DateTime::createFromFormat($this->_dateFormat, $date);
 
         if ($parsedDate !== false) {
-
             $parsedDate->setTimezone($this->_apiTimeZone);
 
             $this->_query[$key] = $parsedDate->format('d/m/Y');
-
         }
 
         return $this;
@@ -423,18 +415,16 @@ class SmsDev
         $client = $this->getGuzzleClient();
 
         try {
-
             $response = $client->send($request);
-
         } catch (\Exception $e) {
-
             return false;
-
         }
 
         $response = json_decode($response->getBody(), true);
 
-        if (json_last_error() != JSON_ERROR_NONE || is_array($response) === false) return false;
+        if (json_last_error() != JSON_ERROR_NONE || is_array($response) === false) {
+            return false;
+        }
 
         $this->_result = $response;
 
