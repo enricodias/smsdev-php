@@ -3,7 +3,7 @@
 namespace enricodias\SmsDev\Tests;
 
 /**
- * Test the optional phone number verification
+ * Test the optional phone number verification.
  *
  * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
  */
@@ -25,13 +25,8 @@ final class PhoneNumberVerificationTest extends SmsDevMock
     public function validPhoneProvider()
     {
         return [
-
-            // with country code
-            ['5511988887777'],
-
-            // without country code
-            ['11988887777'],
-
+            ['5511988887777'], // with country code
+            ['11988887777'], // without country code
         ];
     }
 
@@ -51,7 +46,6 @@ final class PhoneNumberVerificationTest extends SmsDevMock
     public function invalidPhoneProvider()
     {
         return [
-
             // invalid input
             [''],
             ['a'],
@@ -83,7 +77,6 @@ final class PhoneNumberVerificationTest extends SmsDevMock
 
             // too long
             ['55119888877777'],
-
         ];
     }
 
