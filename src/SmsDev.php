@@ -361,7 +361,7 @@ class SmsDev
      */
     private function validatePhoneNumber($number)
     {
-        if (\class_exists('\libphonenumber\PhoneNumberUtil')) {
+        if (\class_exists('\libphonenumber\PhoneNumberUtil') === true) {
             $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
             $mobilePhoneNumber = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberType::MOBILE;
 
