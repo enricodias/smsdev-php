@@ -251,7 +251,7 @@ class SmsDev
             [
                 'Accept' => 'application/json',
             ],
-            json_encode(
+            \json_encode(
                 $this->query
             )
         );
