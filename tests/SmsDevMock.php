@@ -10,7 +10,7 @@ abstract class SmsDevMock extends TestCase
 {
     protected $_container = [];
 
-    public function getServiceMock($apiResponse = '')
+    public function getServiceMock($apiResponse = '', $apiKey = '')
     {
         \date_default_timezone_set('UTC');
 
@@ -36,6 +36,7 @@ abstract class SmsDevMock extends TestCase
         ]);
 
         $stub = $this->getMockBuilder(SmsDev::class)
+            ->setConstructorArgs([$apiKey])
             ->setMethods(['getGuzzleClient'])
             ->getMock();
 

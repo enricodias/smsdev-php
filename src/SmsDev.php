@@ -70,6 +70,10 @@ class SmsDev
      */
     public function __construct($apiKey = '')
     {
+        if ($apiKey === '' && \array_key_exists('SMSDEV_API_KEY', $_SERVER) === true) {
+            $apiKey = $_SERVER['SMSDEV_API_KEY'];
+        }
+
         $this->apiKey = $apiKey;
 
         $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');

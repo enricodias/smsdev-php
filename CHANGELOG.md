@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file, in reverse 
 
 ## Unreleased
 
+#### Added
+- Add support for loading the API key from an environment variable
+
 ## 0.4
 
 _Released: 2022-06-01_
