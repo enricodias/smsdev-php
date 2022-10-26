@@ -25,6 +25,8 @@ Create a new instance with your API key:
 $SmsDev = new \enricodias\SmsDev('API_KEY');
 ```
 
+> If the API key is not provided, the library will look for the environment variable `SMSDEV_API_KEY`
+
 Set any date format to be used in all date methods:
 
 ```php
