@@ -21,6 +21,8 @@ final class ApiRequestsTest extends SmsDevMock
 
         $this->assertSame('',      $query->key);
         $this->assertSame('saldo', $query->action);
+
+         $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch balance.'));
     }
 
     public function testSend()
@@ -39,6 +41,8 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals('9',             $query->type);
         $this->assertEquals('5511988887777', $query->number);
         $this->assertEquals('Message',       $query->msg);
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
     }
 
     public function testSendWithRefer()
@@ -75,6 +79,8 @@ final class ApiRequestsTest extends SmsDevMock
 
         $this->assertEquals('',  $query->key);
         $this->assertEquals('0', $query->status);
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch messages.'));
     }
 
     public function testFilterById()

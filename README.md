@@ -48,7 +48,31 @@ $SmsDev = new \enricodias\SmsDev(
 
 Any argument left out (or passed as `null`) falls back to auto discovery.
 
-Set any date format to be used in all date methods:
+#### Using a logger
+
+This package supports [PSR-3](https://www.php-fig.org/psr/psr-3/) logging. [Monolog](https://github.com/Seldaek/monolog) is a common choice:
+
+```php
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+
+$logger = new Logger('SmsDev');
+$logger->pushHandler(new StreamHandler('/var/log/SmsDev.log'));
+
+$SmsDev = new \enricodias\SmsDev(
+    'API_KEY',
+    null,
+    null,
+    null,
+    $logger // Psr\Log\LoggerInterface
+);
+```
+
+When no logger is provided, a `Psr\Log\NullLogger` is used and no logs are recorded.
+
+`debug` messages log request/response details for troubleshooting, and `info` messages log SMS usage (messages sent, messages fetched, balance checks). `warning` and `error` messages are logged for invalid phone numbers and failed API requests. Phone numbers and message contents are not redacted from the logs.
+
+### Set any date format to be used in all date methods:
 
 ```php
 $SmsDev->setDateFormat('Y-m-d H:i:s'); // default is 'U', timestamp

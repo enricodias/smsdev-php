@@ -8,6 +8,8 @@ use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 /**
  * SmsDev.
@@ -89,6 +91,13 @@ class SmsDev
     private $streamFactory;
 
     /**
+     * PSR-3 logger used to record debug and usage data.
+     *
+     * @var LoggerInterface
+     */
+    private $logger;
+
+    /**
      * Creates a new SmsDev instance with an API key and sets the default API timezone.
      *
      * The HTTP client and PSR-17 factories are optional. When not provided, they are resolved
@@ -96,6 +105,7 @@ class SmsDev
      * will be used automatically.
      *
      * @param string $apiKey
+     * @param LoggerInterface|null $logger
      * @param ClientInterface|null $httpClient
      * @param RequestFactoryInterface|null $requestFactory
      * @param StreamFactoryInterface|null $streamFactory
@@ -104,7 +114,8 @@ class SmsDev
         string $apiKey,
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
-        ?StreamFactoryInterface $streamFactory = null
+        ?StreamFactoryInterface $streamFactory = null,
+        ?LoggerInterface $logger = null
     ) {
         $this->apiKey = $apiKey;
         $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
@@ -112,6 +123,7 @@ class SmsDev
         $this->httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
         $this->requestFactory = $requestFactory !== null ? $requestFactory : Psr17FactoryDiscovery::findRequestFactory();
         $this->streamFactory = $streamFactory !== null ? $streamFactory : Psr17FactoryDiscovery::findStreamFactory();
+        $this->logger = $logger !== null ? $logger : new NullLogger();
     }
 
     /**
@@ -132,9 +144,12 @@ class SmsDev
         if ($this->numberValidation === true) {
             try {
                 $number = $this->validatePhoneNumber($number);
-            } catch (\Exception $e) {
-                return false;
             } catch (\Throwable $e) {
+                $this->logger->warning('Invalid phone number.', [
+                    'number' => $number,
+                    'reason' => $e->getMessage(),
+                ]);
+
                 return false;
             }
         }
@@ -151,8 +166,20 @@ class SmsDev
         $request = $this->buildRequest('POST', self::API_BASE_URL.'/send', $params);
 
         if ($this->makeRequest($request) === false || $this->_result['situacao'] !== 'OK') {
+            $this->logger->error('Failed to send SMS message.', [
+                'number' => $number,
+                'refer'  => $refer,
+                'result' => $this->_result,
+            ]);
+
             return false;
         }
+
+        $this->logger->info('SMS message sent.', [
+            'number' => $number,
+            'message' => $message,
+            'refer'  => $refer,
+        ]);
 
         return true;
     }
@@ -267,6 +294,10 @@ class SmsDev
         $request = $this->buildRequest('GET', self::API_BASE_URL.'/inbox', $this->query);
 
         if ($this->makeRequest($request) === false) {
+            $this->logger->error('Failed to fetch messages.', [
+                'filters' => $this->query,
+            ]);
+
             return false;
         }
 
@@ -274,8 +305,18 @@ class SmsDev
         $this->setFilter();
 
         if (\is_array($this->_result) === true) {
+            $this->logger->info('Messages fetched.', [
+            'filters' => $this->query,
+                'count' => \count($this->_result),
+            ]);
+
             return true;
         }
+
+        $this->logger->error('Unexpected API response while fetching messages.', [
+            'filters' => $this->query,
+            'result' => $this->_result,
+        ]);
 
         return false;
     }
@@ -332,10 +373,20 @@ class SmsDev
         $this->makeRequest($request);
 
         if (\array_key_exists('saldo_sms', $this->_result) === false) {
+            $this->logger->error('Failed to fetch balance.', [
+                'result' => $this->_result,
+            ]);
+
             return 0;
         }
 
-        return (int) $this->_result['saldo_sms'];
+        $balance = (int) $this->_result['saldo_sms'];
+
+        $this->logger->info('Balance fetched.', [
+            'balance' => $balance,
+        ]);
+
+        return $balance;
     }
 
     /**
@@ -422,15 +473,40 @@ class SmsDev
      */
     private function makeRequest(RequestInterface $request): bool
     {
+        $this->logger->debug('Sending request to the SmsDev API.', [
+            'method' => $request->getMethod(),
+            'uri'    => (string) $request->getUri(),
+            'body'   => (string) $request->getBody(),
+        ]);
+
+        $request->getBody()->rewind();
+
         try {
             $response = $this->httpClient->sendRequest($request);
         } catch (\Throwable $e) {
+            $this->logger->error('Failed to send request to the SmsDev API.', [
+                'method' => $request->getMethod(),
+                'uri'    => (string) $request->getUri(),
+                'reason' => $e->getMessage(),
+            ]);
+
             return false;
         }
 
-        $response = \json_decode($response->getBody(), true);
+        $body = (string) $response->getBody();
+
+        $this->logger->debug('Received response from the SmsDev API.', [
+            'status' => $response->getStatusCode(),
+            'body'   => $body,
+        ]);
+
+        $response = \json_decode($body, true);
 
         if (\json_last_error() !== JSON_ERROR_NONE || \is_array($response) === false) {
+            $this->logger->error('Invalid JSON response from the SmsDev API.', [
+                'body' => $body,
+            ]);
+
             return false;
         }
 

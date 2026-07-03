@@ -15,11 +15,17 @@ abstract class SmsDevMock extends TestCase
 {
     protected $_container = [];
 
+    /**
+     * @var TestLogger
+     */
+    protected $_logger;
+
     public function getServiceMock($apiResponse = '', $apiKey = '')
     {
         \date_default_timezone_set('UTC');
 
         $this->_container = [];
+        $this->_logger = new TestLogger();
 
         $mock = new MockHandler([
             new Response(200, [], $apiResponse),
@@ -34,7 +40,7 @@ abstract class SmsDevMock extends TestCase
 
         $httpFactory = new HttpFactory();
 
-        return new SmsDev($apiKey, $client, $httpFactory, $httpFactory);
+        return new SmsDev($apiKey, $client, $httpFactory, $httpFactory, $this->_logger);
     }
 
     public function getRequestPath()
@@ -45,5 +51,10 @@ abstract class SmsDevMock extends TestCase
     public function getRequestBody()
     {
         return \json_decode($this->_container[0]['request']->getBody()->getContents());
+    }
+
+    public function getLogger(): TestLogger
+    {
+        return $this->_logger;
     }
 }

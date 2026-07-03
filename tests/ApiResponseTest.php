@@ -16,6 +16,10 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev = $this->getServiceMock($apiResponse);
 
         $this->assertSame(1200, $SmsDev->getBalance());
+
+        $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Balance fetched.', [
+            'balance' => 1200,
+        ]));
     }
 
     public function testGetBalance_EmptyResponse()
@@ -25,6 +29,8 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev = $this->getServiceMock($apiResponse);
 
         $this->assertSame(0, $SmsDev->getBalance());
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch balance.'));
     }
 
     /**
@@ -37,6 +43,12 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev->setNumberValidation(false);
 
         $this->assertSame($expectedResponse, $SmsDev->send($number, $message, $refer));
+
+        if ($expectedResponse === true) {
+            $this->assertTrue($this->getLogger()->hasRecord('info', 'SMS message sent.'));
+        } else {
+            $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
+        }
     }
 
     /**
@@ -77,6 +89,10 @@ final class ApiResponseTest extends SmsDevMock
         $this->assertSame('2018-01-19 13:35:14', $parsedMessages['date']); // UTC conversion
         $this->assertSame('5511988887777',       $parsedMessages['number']);
         $this->assertSame('Resposta',            $parsedMessages['message']);
+
+        $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Messages fetched.', [
+            'count' => 1,
+        ]));
     }
 
     public function testFilterByUnread_EmptyResponse()
@@ -90,6 +106,8 @@ final class ApiResponseTest extends SmsDevMock
 
         $this->assertEmpty($SmsDev->getResult());
         $this->assertEmpty($SmsDev->parsedMessages());
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch messages.'));
     }
 
 
@@ -161,5 +179,8 @@ final class ApiResponseTest extends SmsDevMock
 
         $this->assertSame(false, $SmsDev->send('1188881000', 'Message'));
         $this->assertSame(false, $SmsDev->fetch());
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch messages.'));
     }
 }

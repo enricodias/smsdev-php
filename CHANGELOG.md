@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file, in reverse 
 
 #### Added
 - PSR-17 and PSR-18 support with auto discovery
+- PSR-3 logger support
 
 #### Removed
 - PHP 5.6 compactibility
