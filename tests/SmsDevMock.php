@@ -3,8 +3,13 @@
 namespace enricodias\SmsDev\Tests;
 
 use enricodias\SmsDev;
-use PHPUnit\Framework\TestCase;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use GuzzleHttp\Psr7\HttpFactory;
+use GuzzleHttp\Psr7\Response;
+use PHPUnit\Framework\TestCase;
 
 abstract class SmsDevMock extends TestCase
 {
@@ -16,33 +21,20 @@ abstract class SmsDevMock extends TestCase
 
         $this->_container = [];
 
-        $mock = new \GuzzleHttp\Handler\MockHandler(
-            [
-                new \GuzzleHttp\Psr7\Response(
-                    200,
-                    [],
-                    $apiResponse
-                ),
-            ]
-        );
+        $mock = new MockHandler([
+            new Response(200, [], $apiResponse),
+        ]);
 
         $history = Middleware::history($this->_container);
 
-        $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
+        $handlerStack = HandlerStack::create($mock);
         $handlerStack->push($history);
 
-        $client = new \GuzzleHttp\Client([
-            'handler' => $handlerStack
-        ]);
+        $client = new Client(['handler' => $handlerStack]);
 
-        $stub = $this->getMockBuilder(SmsDev::class)
-            ->setConstructorArgs([$apiKey])
-            ->setMethods(['getGuzzleClient'])
-            ->getMock();
+        $httpFactory = new HttpFactory();
 
-        $stub->method('getGuzzleClient')->willReturn($client);
-
-        return $stub;
+        return new SmsDev($apiKey, $client, $httpFactory, $httpFactory);
     }
 
     public function getRequestPath()

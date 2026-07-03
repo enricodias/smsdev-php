@@ -2,8 +2,12 @@
 
 namespace enricodias;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
+use Http\Discovery\Psr17FactoryDiscovery;
+use Http\Discovery\Psr18ClientDiscovery;
+use Psr\Http\Client\ClientInterface;
+use Psr\Http\Message\RequestFactoryInterface;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\StreamFactoryInterface;
 
 /**
  * SmsDev.
@@ -64,10 +68,43 @@ class SmsDev
     private $_result = [];
 
     /**
-     * Creates a new SmsDev instance with an API key and sets the default API timezone.
+     * PSR-18 HTTP client used to send requests to the API.
+     *
+     * @var ClientInterface|null
      */
-    public function __construct(string $apiKey = '')
-    {
+    private $httpClient;
+
+    /**
+     * PSR-17 factory used to build requests.
+     *
+     * @var RequestFactoryInterface|null
+     */
+    private $requestFactory;
+
+    /**
+     * PSR-17 factory used to build request bodies.
+     *
+     * @var StreamFactoryInterface|null
+     */
+    private $streamFactory;
+
+    /**
+     * Creates a new SmsDev instance with an API key and sets the default API timezone.
+     *
+     * The HTTP client and PSR-17 factories are optional. When not provided, they are resolved
+     * through auto discovery, so any PSR-18 client and PSR-17 factories installed on the project
+     * will be used automatically.
+     *
+     * @param ClientInterface|null $httpClient
+     * @param RequestFactoryInterface|null $requestFactory
+     * @param StreamFactoryInterface|null $streamFactory
+     */
+    public function __construct(
+        string $apiKey = '',
+        ?ClientInterface $httpClient = null,
+        ?RequestFactoryInterface $requestFactory = null,
+        ?StreamFactoryInterface $streamFactory = null
+    ) {
         if ($apiKey === '' && \array_key_exists('SMSDEV_API_KEY', $_SERVER) === true) {
             $apiKey = $_SERVER['SMSDEV_API_KEY'];
         }
@@ -75,6 +112,10 @@ class SmsDev
         $this->apiKey = $apiKey;
 
         $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
+
+        $this->httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
+        $this->requestFactory = $requestFactory !== null ? $requestFactory : Psr17FactoryDiscovery::findRequestFactory();
+        $this->streamFactory = $streamFactory !== null ? $streamFactory : Psr17FactoryDiscovery::findStreamFactory();
     }
 
     /**
@@ -111,14 +152,7 @@ class SmsDev
 
         if ($refer) $params['refer'] = $refer;
 
-        $request = new Request(
-            'POST',
-            $this->apiUrl.'/send',
-            [
-                'Accept' => 'application/json',
-            ],
-            \json_encode($params)
-        );
+        $request = $this->buildRequest('POST', $this->apiUrl.'/send', $params);
 
         if ($this->makeRequest($request) === false || $this->_result['situacao'] !== 'OK') {
             return false;
@@ -234,16 +268,7 @@ class SmsDev
 
         $this->query['key'] = $this->apiKey;
 
-        $request = new Request(
-            'GET',
-            $this->apiUrl.'/inbox',
-            [
-                'Accept' => 'application/json',
-            ],
-            \json_encode(
-                $this->query
-            )
-        );
+        $request = $this->buildRequest('GET', $this->apiUrl.'/inbox', $this->query);
 
         if ($this->makeRequest($request) === false) {
             return false;
@@ -303,17 +328,10 @@ class SmsDev
     {
         $this->_result = [];
 
-        $request = new Request(
-            'GET',
-            $this->apiUrl.'/balance',
-            [
-                'Accept' => 'application/json',
-            ],
-            \json_encode([
-                'key'    => $this->apiKey,
-                'action' => 'saldo',
-            ])
-        );
+        $request = $this->buildRequest('GET', $this->apiUrl.'/balance', [
+            'key'    => $this->apiKey,
+            'action' => 'saldo',
+        ]);
 
         $this->makeRequest($request);
 
@@ -391,15 +409,26 @@ class SmsDev
     }
 
     /**
+     * Builds a PSR-7 request to be sent to the API.
+     */
+    private function buildRequest(string $method, string $uri, array $params): RequestInterface
+    {
+        $body = $this->streamFactory->createStream(\json_encode($params));
+
+        return $this->requestFactory
+            ->createRequest($method, $uri)
+            ->withHeader('Accept', 'application/json')
+            ->withBody($body);
+    }
+
+    /**
      * Sends a request to the smsdev.com.br API.
      */
-    private function makeRequest(Request $request): bool
+    private function makeRequest(RequestInterface $request): bool
     {
-        $client = $this->getGuzzleClient();
-
         try {
-            $response = $client->send($request);
-        } catch (\Exception $e) {
+            $response = $this->httpClient->sendRequest($request);
+        } catch (\Throwable $e) {
             return false;
         }
 
@@ -412,16 +441,5 @@ class SmsDev
         $this->_result = $response;
 
         return true;
-    }
-
-    /**
-     * Creates GuzzleHttp\Client to be used in API requests.
-     * This method is needed to test API calls in unit tests.
-     *
-     * @codeCoverageIgnore
-     */
-    protected function getGuzzleClient(): Client
-    {
-        return new Client();
     }
 }

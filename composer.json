@@ -11,14 +11,21 @@
         }
     ],
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
     },
     "require": {
         "php": "^7.3 || ^8.0",
-        "guzzlehttp/guzzle": "^6.4 || ^7.5"
+        "php-http/discovery": "^1.19",
+        "psr/http-client": "^1.0",
+        "psr/http-factory": "^1.0",
+        "psr/http-message": "^1.0 || ^2.0"
     },
     "suggest": {
-        "giggsey/libphonenumber-for-php": "Allows phone number verification"
+        "giggsey/libphonenumber-for-php": "Allows phone number verification",
+        "guzzlehttp/guzzle": "PSR-18 HTTP client used together with php-http/discovery for auto discovery"
     },
     "autoload": {
         "psr-4": {
@@ -31,7 +38,8 @@
         }
     },
     "require-dev": {
+        "guzzlehttp/guzzle": "^7.13",
         "phpunit/phpunit": "^9.6",
-        "scrutinizer/ocular": "1.7.*"
+        "scrutinizer/ocular": "^1.9"
     }
 }

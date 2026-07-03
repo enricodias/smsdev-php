@@ -17,6 +17,14 @@ Require this package with Composer in the root directory of your project.
 composer require enricodias/smsdev
 ```
 
+This package requires an HTTP client implementing [PSR-18](https://www.php-fig.org/psr/psr-18/) and request/stream factories implementing [PSR-17](https://www.php-fig.org/psr/psr-17/). If your project already has a package providing these, it will be found automatically through [php-http/discovery](https://github.com/php-http/discovery).
+
+Otherwise, you will need to install one, [Guzzle](https://github.com/guzzle/guzzle) for example:
+
+```bash
+composer require guzzlehttp/guzzle
+```
+
 ## Usage
 
 Create a new instance with your API key:
@@ -26,6 +34,21 @@ $SmsDev = new \enricodias\SmsDev('API_KEY');
 ```
 
 > If the API key is not provided, the library will look for the environment variable `SMSDEV_API_KEY`
+
+#### Using a custom HTTP client
+
+By default, the HTTP client and PSR-17 factories are resolved automatically through [php-http/discovery](https://github.com/php-http/discovery). You can also provide your own PSR-18 client and PSR-17 factories in the constructor:
+
+```php
+$SmsDev = new \enricodias\SmsDev(
+    'API_KEY',
+    $httpClient,     // Psr\Http\Client\ClientInterface
+    $requestFactory, // Psr\Http\Message\RequestFactoryInterface
+    $streamFactory   // Psr\Http\Message\StreamFactoryInterface
+);
+```
+
+Any argument left out (or passed as `null`) falls back to auto discovery.
 
 Set any date format to be used in all date methods:
 
