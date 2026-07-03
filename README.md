@@ -33,8 +33,6 @@ Create a new instance with your API key:
 $SmsDev = new \enricodias\SmsDev('API_KEY');
 ```
 
-> If the API key is not provided, the library will look for the environment variable `SMSDEV_API_KEY`
-
 #### Using a custom HTTP client
 
 By default, the HTTP client and PSR-17 factories are resolved automatically through [php-http/discovery](https://github.com/php-http/discovery). You can also provide your own PSR-18 client and PSR-17 factories in the constructor:

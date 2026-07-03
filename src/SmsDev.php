@@ -23,12 +23,12 @@ class SmsDev
     /**
      * @var string
      */
-    private $apiUrl = 'https://api.smsdev.com.br/v1';
+    private const API_BASE_URL = 'https://api.smsdev.com.br/v1';
 
     /**
      * @var string
      */
-    private $apiKey = '';
+    private $apiKey;
 
     /**
      * Whether or not to validate phone numbers locally before sending.
@@ -95,22 +95,18 @@ class SmsDev
      * through auto discovery, so any PSR-18 client and PSR-17 factories installed on the project
      * will be used automatically.
      *
+     * @param string $apiKey
      * @param ClientInterface|null $httpClient
      * @param RequestFactoryInterface|null $requestFactory
      * @param StreamFactoryInterface|null $streamFactory
      */
     public function __construct(
-        string $apiKey = '',
+        string $apiKey,
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null
     ) {
-        if ($apiKey === '' && \array_key_exists('SMSDEV_API_KEY', $_SERVER) === true) {
-            $apiKey = $_SERVER['SMSDEV_API_KEY'];
-        }
-
         $this->apiKey = $apiKey;
-
         $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
 
         $this->httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
@@ -152,7 +148,7 @@ class SmsDev
 
         if ($refer) $params['refer'] = $refer;
 
-        $request = $this->buildRequest('POST', $this->apiUrl.'/send', $params);
+        $request = $this->buildRequest('POST', self::API_BASE_URL.'/send', $params);
 
         if ($this->makeRequest($request) === false || $this->_result['situacao'] !== 'OK') {
             return false;
@@ -268,7 +264,7 @@ class SmsDev
 
         $this->query['key'] = $this->apiKey;
 
-        $request = $this->buildRequest('GET', $this->apiUrl.'/inbox', $this->query);
+        $request = $this->buildRequest('GET', self::API_BASE_URL.'/inbox', $this->query);
 
         if ($this->makeRequest($request) === false) {
             return false;
@@ -328,7 +324,7 @@ class SmsDev
     {
         $this->_result = [];
 
-        $request = $this->buildRequest('GET', $this->apiUrl.'/balance', [
+        $request = $this->buildRequest('GET', self::API_BASE_URL.'/balance', [
             'key'    => $this->apiKey,
             'action' => 'saldo',
         ]);

@@ -6,7 +6,6 @@ All notable changes to this project will be documented in this file, in reverse 
 
 #### Added
 - PSR-17 and PSR-18 support with auto discovery
-- Add support for loading the API key from an environment variable
 
 #### Removed
 - PHP 5.6 compactibility
