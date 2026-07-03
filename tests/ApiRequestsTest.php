@@ -125,7 +125,7 @@ final class ApiRequestsTest extends SmsDevMock
         $query = $this->getRequestBody();
 
         $this->assertEquals('', $query->key);
-        $this->assertObjectNotHasAttribute('date_from', $query);
+        $this->assertObjectNotHasProperty('date_from', $query);
         $this->assertEquals('19/01/2019', $query->date_to);
 
         $SmsDev = $this->getServiceMock();
@@ -141,7 +141,7 @@ final class ApiRequestsTest extends SmsDevMock
 
         $this->assertEquals('', $query->key);
         $this->assertEquals('19/01/2018', $query->date_from);
-        $this->assertObjectNotHasAttribute('date_to', $query);
+        $this->assertObjectNotHasProperty('date_to', $query);
     }
 
     public function testFilterByDate()
@@ -158,7 +158,7 @@ final class ApiRequestsTest extends SmsDevMock
         $query = $this->getRequestBody();
 
         $this->assertEquals('', $query->key);
-        $this->assertObjectNotHasAttribute('date_from', $query);
+        $this->assertObjectNotHasProperty('date_from', $query);
         $this->assertEquals('01/01/2019', $query->date_to);
 
         $SmsDev = $this->getServiceMock();
@@ -174,7 +174,7 @@ final class ApiRequestsTest extends SmsDevMock
 
         $this->assertEquals('', $query->key);
         $this->assertEquals('01/01/2019', $query->date_from);
-        $this->assertObjectNotHasAttribute('date_to', $query);
+        $this->assertObjectNotHasProperty('date_to', $query);
     }
 
     /**

@@ -65,10 +65,8 @@ class SmsDev
 
     /**
      * Creates a new SmsDev instance with an API key and sets the default API timezone.
-     *
-     * @param string $apiKey
      */
-    public function __construct($apiKey = '')
+    public function __construct(string $apiKey = '')
     {
         if ($apiKey === '' && \array_key_exists('SMSDEV_API_KEY', $_SERVER) === true) {
             $apiKey = $_SERVER['SMSDEV_API_KEY'];
@@ -84,13 +82,13 @@ class SmsDev
      *
      * This method does not guarantee that the recipient received the massage since the message delivery is async.
      *
-     * @param int $number
+     * @param string|null $number
      * @param string $message
-     * @param string $refer (optional) User reference for message identification.
+     * @param string|null $refer (optional) User reference for message identification.
      *
      * @return bool true if the API accepted the request.
      */
-    public function send($number, $message, $refer = null)
+    public function send(?string $number, string $message, ?string $refer = null): bool
     {
         $this->_result = [];
 
@@ -131,23 +129,18 @@ class SmsDev
 
     /**
      * Enables or disables the phone number validation.
-     *
-     * @param bool $shouldValidate
-     *
-     * @return void
      */
-    public function setNumberValidation($shouldValidate = true)
+    public function setNumberValidation(bool $shouldValidate = true): void
     {
-        $this->numberValidation = (bool) $shouldValidate;
+        $this->numberValidation = $shouldValidate;
     }
 
     /**
      * Sets the date format to be used in all date functions.
      *
      * @param string $dateFormat A valid date format (ex: Y-m-d).
-     * @return SmsDev
      */
-    public function setDateFormat($dateFormat)
+    public function setDateFormat(string $dateFormat): self
     {
         $this->dateFormat = $dateFormat;
 
@@ -156,10 +149,8 @@ class SmsDev
 
     /**
      * Resets the search filter.
-     *
-     * @return SmsDev
      */
-    public function setFilter()
+    public function setFilter(): self
     {
         $this->query = [
             'status' => 1,
@@ -170,10 +161,8 @@ class SmsDev
 
     /**
      * Sets the search filter to return unread messages only.
-     *
-     * @return SmsDev
      */
-    public function isUnread()
+    public function isUnread(): self
     {
         $this->query['status'] = 0;
 
@@ -183,14 +172,10 @@ class SmsDev
     /**
      * Sets the search filter to return a message with a specific id.
      *
-     * @param int $id
-     *
      * @return SmsDev
      */
-    public function byId($id)
+    public function byId(int $id): self
     {
-        $id = \intval($id);
-
         if ($id > 0) {
             $this->query['id'] = $id;
         }
@@ -205,7 +190,7 @@ class SmsDev
      *
      * @return SmsDev
      */
-    public function dateFrom($date)
+    public function dateFrom(string $date): self
     {
         return $this->parseDate('date_from', $date);
     }
@@ -217,7 +202,7 @@ class SmsDev
      *
      * @return SmsDev
      */
-    public function dateTo($date)
+    public function dateTo(string $date): self
     {
         return $this->parseDate('date_to', $date);
     }
@@ -230,7 +215,7 @@ class SmsDev
      *
      * @return SmsDev
      */
-    public function dateBetween($dateFrom, $dateTo)
+    public function dateBetween(string $dateFrom, string $dateTo): self
     {
         return $this->dateFrom($dateFrom)->dateTo($dateTo);
     }
@@ -243,7 +228,7 @@ class SmsDev
      *
      * @return bool True if the request was successful.
      */
-    public function fetch()
+    public function fetch(): bool
     {
         $this->_result = [];
 
@@ -283,7 +268,7 @@ class SmsDev
      *
      * @return array List of received messages.
      */
-    public function parsedMessages()
+    public function parsedMessages(): array
     {
         $localTimeZone = new \DateTimeZone(\date_default_timezone_get());
 
@@ -314,7 +299,7 @@ class SmsDev
      *
      * @return int Current balance in BRL cents.
      */
-    public function getBalance()
+    public function getBalance(): int
     {
         $this->_result = [];
 
@@ -346,7 +331,7 @@ class SmsDev
      *
      * @return array Raw API response.
      */
-    public function getResult()
+    public function getResult(): array
     {
         return $this->_result;
     }
@@ -356,14 +341,14 @@ class SmsDev
      *
      * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
      *
-     * @param int $number
+     * @param string|null $number
      *
      * @return int A valid mobile phone number.
      *
      * @throws \libphonenumber\NumberParseException If the number is not valid.
      * @throws \Exception If the number is not a valid brazilian mobile number.
      */
-    private function validatePhoneNumber($number)
+    private function validatePhoneNumber(?string $number): int
     {
         if (\class_exists('\libphonenumber\PhoneNumberUtil') === true) {
             $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
@@ -391,10 +376,8 @@ class SmsDev
      *
      * @param string $key The filter key to be set as a search filter.
      * @param string $date
-     *
-     * @return SmsDev
      */
-    private function parseDate($key, $date)
+    private function parseDate(string $key, string $date): self
     {
         $parsedDate = \DateTime::createFromFormat($this->dateFormat, $date);
 
@@ -409,12 +392,8 @@ class SmsDev
 
     /**
      * Sends a request to the smsdev.com.br API.
-     *
-     * @param \GuzzleHttp\Psr7\Request $request
-     *
-     * @return bool
      */
-    private function makeRequest($request)
+    private function makeRequest(Request $request): bool
     {
         $client = $this->getGuzzleClient();
 
@@ -439,11 +418,9 @@ class SmsDev
      * Creates GuzzleHttp\Client to be used in API requests.
      * This method is needed to test API calls in unit tests.
      *
-     * @return object \GuzzleHttp\Client
-     *
      * @codeCoverageIgnore
      */
-    protected function getGuzzleClient()
+    protected function getGuzzleClient(): Client
     {
         return new Client();
     }
