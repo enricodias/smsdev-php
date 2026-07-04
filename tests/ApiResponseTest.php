@@ -2,6 +2,8 @@
 
 namespace enricodias\SmsDev\Tests;
 
+use enricodias\SmsDev\Exceptions\InvalidResponseException;
+
 /**
  * Test if the class can parse the API responses correctly.
  *
@@ -24,7 +26,7 @@ final class ApiResponseTest extends SmsDevMock
 
     public function testGetBalance_EmptyResponse()
     {
-        $apiResponse = '';
+        $apiResponse = '{}';
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
@@ -97,7 +99,7 @@ final class ApiResponseTest extends SmsDevMock
 
     public function testFilterByUnread_EmptyResponse()
     {
-        $SmsDev = $this->getServiceMock('');
+        $SmsDev = $this->getServiceMock('{}');
 
         $SmsDev->setDateFormat('Y-m-d H:i:s')
             ->setFilter()
@@ -106,8 +108,6 @@ final class ApiResponseTest extends SmsDevMock
 
         $this->assertEmpty($SmsDev->getResult());
         $this->assertEmpty($SmsDev->parsedMessages());
-
-        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch messages.'));
     }
 
 
@@ -160,7 +160,7 @@ final class ApiResponseTest extends SmsDevMock
 
     public function testEmptyInbox()
     {
-        $apiResponse = '[{"situacao":"OK",descricao":"SEM MENSAGENS NA CAIXA DE ENTRADA."}]';
+        $apiResponse = '[{"situacao":"OK","descricao":"SEM MENSAGENS NA CAIXA DE ENTRADA."}]';
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
@@ -178,9 +178,7 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev->setNumberValidation(false);
 
         $this->assertSame(false, $SmsDev->send('1188881000', 'Message'));
-        $this->assertSame(false, $SmsDev->fetch());
 
         $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
-        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch messages.'));
     }
 }

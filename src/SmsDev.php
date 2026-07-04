@@ -2,11 +2,14 @@
 
 namespace enricodias\SmsDev;
 
+use enricodias\SmsDev\Exceptions\InvalidResponseException;
+use enricodias\SmsDev\Exceptions\TransportException;
+use enricodias\SmsDev\Http\ApiClient;
+use enricodias\SmsDev\Http\RequestBuilder;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;
 use Psr\Http\Message\RequestFactoryInterface;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamFactoryInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -70,25 +73,18 @@ class SmsDev
     private $_result = [];
 
     /**
-     * PSR-18 HTTP client used to send requests to the API.
+     * Builds PSR-7 requests to be sent to the API.
      *
-     * @var ClientInterface|null
+     * @var RequestBuilder
      */
-    private $httpClient;
+    private $requestBuilder;
 
     /**
-     * PSR-17 factory used to build requests.
+     * Sends requests to the API and decodes the JSON response body.
      *
-     * @var RequestFactoryInterface|null
+     * @var ApiClient
      */
-    private $requestFactory;
-
-    /**
-     * PSR-17 factory used to build request bodies.
-     *
-     * @var StreamFactoryInterface|null
-     */
-    private $streamFactory;
+    private $apiClient;
 
     /**
      * PSR-3 logger used to record debug and usage data.
@@ -120,10 +116,13 @@ class SmsDev
         $this->apiKey = $apiKey;
         $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
 
-        $this->httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
-        $this->requestFactory = $requestFactory !== null ? $requestFactory : Psr17FactoryDiscovery::findRequestFactory();
-        $this->streamFactory = $streamFactory !== null ? $streamFactory : Psr17FactoryDiscovery::findStreamFactory();
+        $httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
+        $requestFactory = $requestFactory !== null ? $requestFactory : Psr17FactoryDiscovery::findRequestFactory();
+        $streamFactory = $streamFactory !== null ? $streamFactory : Psr17FactoryDiscovery::findStreamFactory();
         $this->logger = $logger !== null ? $logger : new NullLogger();
+
+        $this->requestBuilder = new RequestBuilder($requestFactory, $streamFactory);
+        $this->apiClient = new ApiClient($httpClient, $this->logger);
     }
 
     /**
@@ -136,6 +135,9 @@ class SmsDev
      * @param string|null $refer (optional) User reference for message identification.
      *
      * @return bool true if the API accepted the request.
+     *
+     * @throws TransportException If the PSR-18 client fails to send the request.
+     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
      */
     public function send(?string $number, string $message, ?string $refer = null): bool
     {
@@ -163,9 +165,11 @@ class SmsDev
 
         if ($refer) $params['refer'] = $refer;
 
-        $request = $this->buildRequest('POST', self::API_BASE_URL.'/send', $params);
+        $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/send', $params);
 
-        if ($this->makeRequest($request) === false || $this->_result['situacao'] !== 'OK') {
+        $this->_result = $this->apiClient->send($request);
+
+        if ($this->_result['situacao'] !== 'OK') {
             $this->logger->error('Failed to send SMS message.', [
                 'number' => $number,
                 'refer'  => $refer,
@@ -284,6 +288,9 @@ class SmsDev
      * @see SmsDev::$_result API response.
      *
      * @return bool True if the request was successful.
+     *
+     * @throws TransportException If the PSR-18 client fails to send the request.
+     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
      */
     public function fetch(): bool
     {
@@ -291,15 +298,9 @@ class SmsDev
 
         $this->query['key'] = $this->apiKey;
 
-        $request = $this->buildRequest('GET', self::API_BASE_URL.'/inbox', $this->query);
+        $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/inbox', $this->query);
 
-        if ($this->makeRequest($request) === false) {
-            $this->logger->error('Failed to fetch messages.', [
-                'filters' => $this->query,
-            ]);
-
-            return false;
-        }
+        $this->_result = $this->apiClient->send($request);
 
         // resets the filters
         $this->setFilter();
@@ -360,17 +361,20 @@ class SmsDev
      * Get the current balance/credits.
      *
      * @return int Current balance in BRL cents.
+     *
+     * @throws TransportException If the PSR-18 client fails to send the request.
+     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
      */
     public function getBalance(): int
     {
         $this->_result = [];
 
-        $request = $this->buildRequest('GET', self::API_BASE_URL.'/balance', [
+        $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/balance', [
             'key'    => $this->apiKey,
             'action' => 'saldo',
         ]);
 
-        $this->makeRequest($request);
+        $this->_result = $this->apiClient->send($request);
 
         if (\array_key_exists('saldo_sms', $this->_result) === false) {
             $this->logger->error('Failed to fetch balance.', [
@@ -453,65 +457,5 @@ class SmsDev
         }
 
         return $this;
-    }
-
-    /**
-     * Builds a PSR-7 request to be sent to the API.
-     */
-    private function buildRequest(string $method, string $uri, array $params): RequestInterface
-    {
-        $body = $this->streamFactory->createStream(\json_encode($params));
-
-        return $this->requestFactory
-            ->createRequest($method, $uri)
-            ->withHeader('Accept', 'application/json')
-            ->withBody($body);
-    }
-
-    /**
-     * Sends a request to the smsdev.com.br API.
-     */
-    private function makeRequest(RequestInterface $request): bool
-    {
-        $this->logger->debug('Sending request to the SmsDev API.', [
-            'method' => $request->getMethod(),
-            'uri'    => (string) $request->getUri(),
-            'body'   => (string) $request->getBody(),
-        ]);
-
-        $request->getBody()->rewind();
-
-        try {
-            $response = $this->httpClient->sendRequest($request);
-        } catch (\Throwable $e) {
-            $this->logger->error('Failed to send request to the SmsDev API.', [
-                'method' => $request->getMethod(),
-                'uri'    => (string) $request->getUri(),
-                'reason' => $e->getMessage(),
-            ]);
-
-            return false;
-        }
-
-        $body = (string) $response->getBody();
-
-        $this->logger->debug('Received response from the SmsDev API.', [
-            'status' => $response->getStatusCode(),
-            'body'   => $body,
-        ]);
-
-        $response = \json_decode($body, true);
-
-        if (\json_last_error() !== JSON_ERROR_NONE || \is_array($response) === false) {
-            $this->logger->error('Invalid JSON response from the SmsDev API.', [
-                'body' => $body,
-            ]);
-
-            return false;
-        }
-
-        $this->_result = $response;
-
-        return true;
     }
 }

@@ -41,8 +41,6 @@ final class PhoneNumberVerificationTest extends SmsDevMock
 
         $this->assertFalse($SmsDev->send($number, 'Message'));
 
-        // Local validation only runs when giggsey/libphonenumber-for-php is installed.
-        // Without it, send() still fails because the mocked API response is empty.
         $wasRejectedLocally = $this->getLogger()->hasRecord('warning', 'Invalid phone number.');
         $wasRejectedByApi   = $this->getLogger()->hasRecord('error', 'Failed to send SMS message.');
 

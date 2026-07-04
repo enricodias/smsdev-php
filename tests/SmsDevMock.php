@@ -20,7 +20,7 @@ abstract class SmsDevMock extends TestCase
      */
     protected $_logger;
 
-    public function getServiceMock($apiResponse = '', $apiKey = '')
+    public function getServiceMock($apiResponse = '{}', $apiKey = '')
     {
         \date_default_timezone_set('UTC');
 
