@@ -2,7 +2,7 @@
 
 namespace enricodias\SmsDev\Tests;
 
-use enricodias\SmsDev;
+use enricodias\SmsDev\SmsDev;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;

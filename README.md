@@ -30,7 +30,7 @@ composer require guzzlehttp/guzzle
 Create a new instance with your API key:
 
 ```php
-$SmsDev = new \enricodias\SmsDev('API_KEY');
+$SmsDev = new \enricodias\SmsDev\SmsDev('API_KEY');
 ```
 
 #### Using a custom HTTP client
@@ -38,7 +38,7 @@ $SmsDev = new \enricodias\SmsDev('API_KEY');
 By default, the HTTP client and PSR-17 factories are resolved automatically through [php-http/discovery](https://github.com/php-http/discovery). You can also provide your own PSR-18 client and PSR-17 factories in the constructor:
 
 ```php
-$SmsDev = new \enricodias\SmsDev(
+$SmsDev = new \enricodias\SmsDev\SmsDev(
     'API_KEY',
     $httpClient,     // Psr\Http\Client\ClientInterface
     $requestFactory, // Psr\Http\Message\RequestFactoryInterface
@@ -59,7 +59,7 @@ use Monolog\Handler\StreamHandler;
 $logger = new Logger('SmsDev');
 $logger->pushHandler(new StreamHandler('/var/log/SmsDev.log'));
 
-$SmsDev = new \enricodias\SmsDev(
+$SmsDev = new \enricodias\SmsDev\SmsDev(
     'API_KEY',
     null,
     null,

@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file, in reverse 
 - PSR-17 and PSR-18 support with auto discovery
 - PSR-3 logger support
 
+#### Changed
+- Moved `SmsDev` into the `enricodias\SmsDev` namespace
+
 #### Removed
 - PHP 5.6 compactibility
 

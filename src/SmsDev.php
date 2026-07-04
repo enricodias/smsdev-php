@@ -1,6 +1,6 @@
 <?php
 
-namespace enricodias;
+namespace enricodias\SmsDev;
 
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
