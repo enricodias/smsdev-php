@@ -53,7 +53,7 @@ final class TestLogger extends AbstractLogger
                 continue;
             }
 
-            if ($this->contextMatches($record['context'], $context) === true) {
+            if ($this->contextMatches($record['context'], $context) ) {
                 return true;
             }
         }
@@ -76,7 +76,7 @@ final class TestLogger extends AbstractLogger
     private function contextMatches(array $actual, array $expected): bool
     {
         foreach ($expected as $key => $value) {
-            if (\array_key_exists($key, $actual) === false) {
+            if (!\array_key_exists($key, $actual)) {
                 return false;
             }
 

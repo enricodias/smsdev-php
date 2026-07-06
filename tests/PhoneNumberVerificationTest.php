@@ -16,7 +16,10 @@ final class PhoneNumberVerificationTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock('{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }');
 
-        $this->assertTrue($SmsDev->send($number, 'Message'));
+        $results = $SmsDev->send($number, 'Message');
+
+        $this->assertCount(1, $results);
+        $this->assertTrue($results[0]->isSuccess());
 
         $this->assertTrue($this->getLogger()->hasRecord('info', 'SMS message sent.'));
     }
@@ -39,7 +42,9 @@ final class PhoneNumberVerificationTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock();
 
-        $this->assertFalse($SmsDev->send($number, 'Message'));
+        $results = $SmsDev->send($number, 'Message');
+
+        $this->assertEmpty($results);
 
         $wasRejectedLocally = $this->getLogger()->hasRecord('warning', 'Invalid phone number.');
         $wasRejectedByApi   = $this->getLogger()->hasRecord('error', 'Failed to send SMS message.');

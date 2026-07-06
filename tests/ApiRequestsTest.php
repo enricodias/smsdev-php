@@ -9,18 +9,20 @@ namespace enricodias\SmsDev\Tests;
  */
 final class ApiRequestsTest extends SmsDevMock
 {
+    public function testApiKeyIsSent()
+    {
+        $this->getServiceMock('{"situacao":"OK"}', 'api_key')->getBalance();
+
+        $this->assertSame('api_key', $this->getRequestBody()->key);
+    }
+
     public function testGetBalance()
     {
-        $SmsDev = $this->getServiceMock();
+        $SmsDev = $this->getServiceMock('{"situacao":"OK","saldo_sms":"0","descricao":"SALDO ATUAL"}');
 
         $SmsDev->getBalance();
 
         $this->assertSame('/v1/balance', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
-
-        $this->assertSame('',      $query->key);
-        $this->assertSame('saldo', $query->action);
     }
 
     public function testSend()

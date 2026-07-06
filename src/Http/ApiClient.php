@@ -73,7 +73,7 @@ class ApiClient
 
         $decodedBody = \json_decode($body, true);
 
-        if (\json_last_error() !== JSON_ERROR_NONE || \is_array($decodedBody) === false) {
+        if (\json_last_error() !== JSON_ERROR_NONE || !\is_array($decodedBody)) {
             $this->logger->error('Invalid JSON response from the SmsDev API.', [
                 'body' => $body,
             ]);

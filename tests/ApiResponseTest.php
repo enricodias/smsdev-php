@@ -2,7 +2,7 @@
 
 namespace enricodias\SmsDev\Tests;
 
-use enricodias\SmsDev\Exceptions\InvalidResponseException;
+use enricodias\SmsDev\Exceptions\ApiException;
 
 /**
  * Test if the class can parse the API responses correctly.
@@ -17,7 +17,10 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $this->assertSame(1200, $SmsDev->getBalance());
+        $balance = $SmsDev->getBalance();
+
+        $this->assertSame(1200, $balance->getSaldoSms());
+        $this->assertSame('R$ 12,00', $balance->getFormattedBalance());
 
         $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Balance fetched.', [
             'balance' => 1200,
@@ -30,27 +33,35 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $this->assertSame(0, $SmsDev->getBalance());
+        try {
+            $SmsDev->getBalance();
 
-        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch balance.'));
+            $this->fail('Expected ApiException was not thrown.');
+        } catch (ApiException $e) {
+            $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch balance.'));
+        }
     }
 
     /**
      * @dataProvider sendDataProvider
      */
-    public function testSend($number, $message, $refer, $expectedResponse, $apiResponse)
+    public function testSend($number, $message, $refer, $expectedSuccess, $apiResponse)
     {
         $SmsDev = $this->getServiceMock($apiResponse);
 
         $SmsDev->setNumberValidation(false);
 
-        $this->assertSame($expectedResponse, $SmsDev->send($number, $message, $refer));
+        $results = $SmsDev->send($number, $message, $refer);
 
-        if ($expectedResponse === true) {
+        $this->assertCount(1, $results);
+        $this->assertSame($expectedSuccess, $results[0]->isSuccess());
+
+        if ($expectedSuccess) {
             $this->assertTrue($this->getLogger()->hasRecord('info', 'SMS message sent.'));
-        } else {
-            $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
+            return;
         }
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
     }
 
     /**
@@ -59,7 +70,7 @@ final class ApiResponseTest extends SmsDevMock
     public function sendDataProvider()
     {
         return [
-            // number,         message,     refer       expectedResponse,   apiResponse
+            // number,         message,     refer       expectedSuccess,   apiResponse
             [ '1188881000',   'Message',    null,       true,               '{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }' ],
             [ '1188881000',   '',           null,       false,              '{"situacao":"ERRO","codigo":"400","descricao":"MENSAGEM NAO DEFINIDA."}' ],
             [ '118888100',    'Message',    null,       true,               '{"situacao":"OK","codigo":"1","id":"645106333","descricao":"MENSAGEM NA FILA"}' ],
@@ -81,16 +92,16 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $SmsDev->setDateFormat('Y-m-d H:i:s')
+        $messages = $SmsDev->setDateFormat('Y-m-d H:i:s')
             ->setFilter()
                 ->isUnread()
             ->fetch();
 
-        $parsedMessages = current($SmsDev->parsedMessages());
+        $message = $messages[0];
 
-        $this->assertSame('2018-01-19 13:35:14', $parsedMessages['date']); // UTC conversion
-        $this->assertSame('5511988887777',       $parsedMessages['number']);
-        $this->assertSame('Resposta',            $parsedMessages['message']);
+        $this->assertSame('2018-01-19 13:35:14', $message->getDataRead()->format('Y-m-d H:i:s')); // UTC conversion
+        $this->assertSame('5511988887777', $message->getTelefone());
+        $this->assertSame('Resposta', $message->getDescricao());
 
         $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Messages fetched.', [
             'count' => 1,
@@ -101,15 +112,14 @@ final class ApiResponseTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock('{}');
 
-        $SmsDev->setDateFormat('Y-m-d H:i:s')
+        $messages = $SmsDev->setDateFormat('Y-m-d H:i:s')
             ->setFilter()
                 ->isUnread()
             ->fetch();
 
         $this->assertEmpty($SmsDev->getResult());
-        $this->assertEmpty($SmsDev->parsedMessages());
+        $this->assertEmpty($messages);
     }
-
 
     public function testFilterById()
     {
@@ -117,13 +127,11 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $SmsDev->setFilter()
+        $messages = $SmsDev->setFilter()
                     ->byId(2515974)
                 ->fetch();
 
-        $result = current($SmsDev->getResult());
-
-        $this->assertSame(2515974, (int)$result['id_sms_read']);
+        $this->assertSame(2515974, (int) $messages[0]->getIdSmsRead());
     }
 
     public function testFilterById_EmptyResponse()
@@ -132,11 +140,11 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $SmsDev->setFilter()
+        $messages = $SmsDev->setFilter()
                     ->byId(2515974)
                 ->fetch();
 
-        $this->assertEmpty($SmsDev->parsedMessages());
+        $this->assertEmpty($messages);
     }
 
     public function testFilterByDate()
@@ -145,17 +153,17 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $SmsDev->setDateFormat('U')
+        $messages = $SmsDev->setDateFormat('U')
             ->setFilter()
                 ->dateFrom(1516330800)
                 ->dateTo(1559444399)
             ->fetch();
 
-        $parsedMessages = current($SmsDev->parsedMessages());
+        $message = $messages[0];
 
-        $this->assertSame('1529418914',    $parsedMessages['date']);
-        $this->assertSame('5511988887777', $parsedMessages['number']);
-        $this->assertSame('Resposta 1',    $parsedMessages['message']);
+        $this->assertSame(1529418914, $message->getDataRead()->getTimestamp());
+        $this->assertSame('5511988887777', $message->getTelefone());
+        $this->assertSame('Resposta 1', $message->getDescricao());
     }
 
     public function testEmptyInbox()
@@ -164,9 +172,9 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $SmsDev->setDateFormat('Y-m-d H:i:s')->fetch();
+        $messages = $SmsDev->setDateFormat('Y-m-d H:i:s')->fetch();
 
-        $this->assertEmpty($SmsDev->parsedMessages());
+        $this->assertEmpty($messages);
     }
 
     public function testWrongApiKey()
@@ -177,7 +185,10 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev->setNumberValidation(false);
 
-        $this->assertSame(false, $SmsDev->send('1188881000', 'Message'));
+        $results = $SmsDev->send('1188881000', 'Message');
+
+        $this->assertCount(1, $results);
+        $this->assertFalse($results[0]->isSuccess());
 
         $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
     }

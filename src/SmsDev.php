@@ -2,10 +2,14 @@
 
 namespace enricodias\SmsDev;
 
+use enricodias\SmsDev\Exceptions\ApiException;
 use enricodias\SmsDev\Exceptions\InvalidResponseException;
 use enricodias\SmsDev\Exceptions\TransportException;
 use enricodias\SmsDev\Http\ApiClient;
 use enricodias\SmsDev\Http\RequestBuilder;
+use enricodias\SmsDev\Result\Balance;
+use enricodias\SmsDev\Result\ResponseMessage;
+use enricodias\SmsDev\Result\SendResult;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;
@@ -134,16 +138,18 @@ class SmsDev
      * @param string $message
      * @param string|null $refer (optional) User reference for message identification.
      *
-     * @return bool true if the API accepted the request.
+     * @return SendResult[] One SendResult per recipient. A single message still returns a
+     *                      one-element array. Per-item failures are reported on the
+     *                      SendResult itself, they do not throw.
      *
      * @throws TransportException If the PSR-18 client fails to send the request.
      * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
      */
-    public function send(?string $number, string $message, ?string $refer = null): bool
+    public function send(?string $number, string $message, ?string $refer = null): array
     {
         $this->_result = [];
 
-        if ($this->numberValidation === true) {
+        if ($this->numberValidation) {
             try {
                 $number = $this->validatePhoneNumber($number);
             } catch (\Throwable $e) {
@@ -152,7 +158,7 @@ class SmsDev
                     'reason' => $e->getMessage(),
                 ]);
 
-                return false;
+                return [];
             }
         }
 
@@ -169,14 +175,18 @@ class SmsDev
 
         $this->_result = $this->apiClient->send($request);
 
-        if ($this->_result['situacao'] !== 'OK') {
+        $results = $this->buildSendResults($this->_result);
+
+        $firstResult = $results[0] ?? null;
+
+        if ($firstResult === null || !$firstResult->isSuccess()) {
             $this->logger->error('Failed to send SMS message.', [
                 'number' => $number,
                 'refer'  => $refer,
                 'result' => $this->_result,
             ]);
 
-            return false;
+            return $results;
         }
 
         $this->logger->info('SMS message sent.', [
@@ -185,7 +195,36 @@ class SmsDev
             'refer'  => $refer,
         ]);
 
-        return true;
+        return $results;
+    }
+
+    /**
+     * Normalizes a send() style response into an array of SendResult.
+     *
+     * The API returns a bare object when there is exactly one item in the response, and
+     * only wraps results in an array when there is more than one item.
+     *
+     * @param array $result
+     *
+     * @return SendResult[]
+     */
+    private function buildSendResults(array $result): array
+    {
+        if (\array_key_exists('situacao', $result)) {
+            return [SendResult::fromArray($result)];
+        }
+
+        $results = [];
+
+        foreach ($result as $item) {
+            if (!\is_array($item)) {
+                continue;
+            }
+
+            $results[] = SendResult::fromArray($item);
+        }
+
+        return $results;
     }
 
     /**
@@ -287,12 +326,12 @@ class SmsDev
      * @see SmsDev::$query Search filters.
      * @see SmsDev::$_result API response.
      *
-     * @return bool True if the request was successful.
+     * @return ResponseMessage[] List of received messages.
      *
      * @throws TransportException If the PSR-18 client fails to send the request.
      * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
      */
-    public function fetch(): bool
+    public function fetch(): array
     {
         $this->_result = [];
 
@@ -305,53 +344,44 @@ class SmsDev
         // resets the filters
         $this->setFilter();
 
-        if (\is_array($this->_result) === true) {
-            $this->logger->info('Messages fetched.', [
-            'filters' => $this->query,
-                'count' => \count($this->_result),
-            ]);
+        $messages = $this->buildResponseMessages($this->_result);
 
-            return true;
-        }
-
-        $this->logger->error('Unexpected API response while fetching messages.', [
+        $this->logger->info('Messages fetched.', [
             'filters' => $this->query,
-            'result' => $this->_result,
+            'count' => \count($messages),
         ]);
 
-        return false;
+        return $messages;
     }
 
     /**
-     * Parse the received messages in a more useful format with the fields date, number and message.
+     * Builds an array of ResponseMessage from a decoded fetch() API response.
      *
-     * The dates received by the API are converted to SmsDev::$dateFormat.
+     * Dates are converted from the API timezone (America/Sao_Paulo) to the local timezone.
      *
-     * @see SmsDev::$dateFormat Date format to be used in all date functions.
+     * @param array $result
      *
-     * @return array List of received messages.
+     * @return ResponseMessage[]
      */
-    public function parsedMessages(): array
+    private function buildResponseMessages(array $result): array
     {
         $localTimeZone = new \DateTimeZone(\date_default_timezone_get());
 
         $messages = [];
 
-        foreach ($this->_result as $key => $result) {
-            if (\is_array($result) === false || \array_key_exists('id_sms_read', $result) === false) {
+        foreach ($result as $item) {
+            if (\is_array($item) === false || \array_key_exists('id_sms_read', $item) === false) {
                 continue;
             }
 
-            $id = $result['id_sms_read'];
-            $date = \DateTime::createFromFormat('d/m/Y H:i:s', $result['data_read'], $this->apiTimeZone);
+            $dataRead = \DateTime::createFromFormat('d/m/Y H:i:s', $item['data_read'], $this->apiTimeZone);
 
-            $date->setTimezone($localTimeZone);
+            if ($dataRead !== false) {
+                $dataRead->setTimezone($localTimeZone);
+                $item['data_read'] = $dataRead;
+            }
 
-            $messages[$id] = [
-                'date'    => $date->format($this->dateFormat),
-                'number'  => $result['telefone'],
-                'message' => $result['descricao'],
-            ];
+            $messages[] = ResponseMessage::fromArray($item);
         }
 
         return $messages;
@@ -360,34 +390,34 @@ class SmsDev
     /**
      * Get the current balance/credits.
      *
-     * @return int Current balance in BRL cents.
+     * @return Balance Current balance in BRL cents.
      *
      * @throws TransportException If the PSR-18 client fails to send the request.
      * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws ApiException If the API reports a failure (situacao other than "OK").
      */
-    public function getBalance(): int
+    public function getBalance(): Balance
     {
         $this->_result = [];
 
         $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/balance', [
-            'key'    => $this->apiKey,
-            'action' => 'saldo',
+            'key' => $this->apiKey,
         ]);
 
         $this->_result = $this->apiClient->send($request);
 
-        if (\array_key_exists('saldo_sms', $this->_result) === false) {
+        $balance = Balance::fromArray($this->_result);
+
+        if (!$balance->isSuccess()) {
             $this->logger->error('Failed to fetch balance.', [
                 'result' => $this->_result,
             ]);
 
-            return 0;
+            throw new ApiException('', $balance->getDescricao() ?? '');
         }
 
-        $balance = (int) $this->_result['saldo_sms'];
-
         $this->logger->info('Balance fetched.', [
-            'balance' => $balance,
+            'balance' => $balance->getSaldoSms(),
         ]);
 
         return $balance;

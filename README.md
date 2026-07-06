@@ -72,80 +72,65 @@ When no logger is provided, a `Psr\Log\NullLogger` is used and no logs are recor
 
 `debug` messages log request/response details for troubleshooting, and `info` messages log SMS usage (messages sent, messages fetched, balance checks). `warning` and `error` messages are logged for invalid phone numbers and failed API requests. Phone numbers and message contents are not redacted from the logs.
 
-### Set any date format to be used in all date methods:
+### Set any date format to be used in the date filter methods:
 
 ```php
 $SmsDev->setDateFormat('Y-m-d H:i:s'); // default is 'U', timestamp
 ```
 
+This affects the input format accepted by `dateFrom()`, `dateTo()` and `dateBetween()`. Dates returned by `fetch()` are typed `\DateTimeInterface` objects instead, see [Parsing the response](#parsing-the-response).
+
 ### Sending an SMS message
 
 ```php
-$SmsDev->send(5511988881111, 'SMS Message'); // returns true if the API accepts the message
+$results = $SmsDev->send('5511988881111', 'SMS Message', 'Reference Code'); // returns an array of SendResult, one per recipient
+
+foreach ($results as $result) {
+    if ($result->isSuccess()) {
+        echo $result->getId(); // message id, used later with cancel() or getStatus()
+
+        continue;
+    }
+
+    echo $result->getDescricao(); // API error message
+}
 
 var_dump($SmsDev->getResult()); // Returns the raw API response.
 ```
+
+A single message still returns a one-element array. Per-item failures are reported on each `SendResult`, `send()` only throws on a total transport/parse failure (see `TransportException` and `InvalidResponseException`).
 
 The country code optional. The default is 55 (Brazil).
 
 #### Phone number validation
 
-If you have the package [giggsey/libphonenumber-for-php](https://github.com/giggsey/libphonenumber-for-php) installed, it will be used to validate numbers locally. You can disable this feature with the method ```setNumberValidation``` before sending:
+If you have the package [giggsey/libphonenumber-for-php](https://github.com/giggsey/libphonenumber-for-php) installed, it will be used to validate numbers locally. You can disable this feature with the method `setNumberValidation` before sending:
 
 ```php
 $SmsDev->setNumberValidation(false); // disables phone number validation
 ```
 
-Note that SmsDev will charge you for messages sent to invalid numbers.
+> **SmsDev will charge you for messages sent to invalid numbers.**
 
 ### Receiving SMS messages
 
-Get unread messages in a specific date interval:
+Every received message is a reply to a message previously sent. You need either the message id or the reference code in order to link the responses with the original message being replied to.
+
+#### Get only unread response messages:
+
+```php
+$SmsDev->setFilter()
+            ->isUnread()
+        ->fetch();
+```
+
+#### Get response messages in a specific date interval:
+
+The following date filters are equivalent:
 
 ```php
 $SmsDev->setDateFormat('Y-m-d');
 
-$SmsDev->setFilter()
-            ->isUnread()
-            ->dateBetween('2018-01-19', '2019-01-19')
-        ->fetch();
-```
-
-Search for a specific message id:
-
-```php
-$SmsDev->setFilter()
-            ->byId(2515974)
-        ->fetch();
-```
-
-### Parsing the response
-
-After fetching the messages you can either access the raw API response using ```getResult()``` or use the function ```parsedMessages()``` to get a simplified array:
-
-```php
-$SmsDev->setDateFormat('U'); // timestamp
-
-$messages = $SmsDev->parsedMessages();
-
-var_dump($messages);
-
-/*
-array(1) {
-    ['date']    => '1529418914'
-    ['number']  => '5511988887777'
-    ['message'] => 'Message'
-}
-*/
-```
-
-Dates are converted to the format specified in ```setDateFormat()```.
-
-### Date filters
-
-The following filters are equivalent:
-
-```php
 $SmsDev->setFilter()
             ->dateBetween('2018-01-19', '2019-01-19')
         ->fetch();
@@ -166,7 +151,46 @@ $SmsDev->setFilter()
         ->fetch();
 ```
 
-## Timezone problems
+#### Search for a specific message id:
+
+```php
+$SmsDev->setFilter()
+            ->byId(2515974)
+        ->fetch();
+```
+
+### Parsing responses
+
+`fetch()` returns an array of `ResponseMessage`, one per message:
+
+```php
+$messages = $SmsDev->fetch();
+
+foreach ($messages as $message) {
+    echo $message->getDataRead()->format('Y-m-d H:i:s'); // \DateTimeInterface, already converted to the local timezone
+    echo $message->getTelefone();
+    echo $message->getId();        // Id of the original message
+    echo $message->getRefer();     // Reference code of the original message
+    echo $message->msgSent();      // Text of the sent message 
+    echo $message->idSmsRead();    // ID of the received message
+    echo $message->getDescricao(); // Text of the received message
+}
+```
+
+### Checking the available account balance
+
+```php
+$balance = $SmsDev->getBalance();
+
+$balance->saldoSms(); // 123
+$balance->getFormattedBalance(); // R$ 1,23
+```
+
+## Serialization
+
+All typed responses are `\JsonSerializable`.
+
+## Timezone issues
 
 The API uses the timezone America/Sao_Paulo. Using another timezone in your application will force you to convert dates locally in order to get correct values.
 
