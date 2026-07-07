@@ -72,14 +72,6 @@ When no logger is provided, a `Psr\Log\NullLogger` is used and no logs are recor
 
 `debug` messages log request/response details for troubleshooting, and `info` messages log SMS usage (messages sent, messages fetched, balance checks). `warning` and `error` messages are logged for invalid phone numbers and failed API requests. Phone numbers and message contents are not redacted from the logs.
 
-### Set any date format to be used in the date filter methods:
-
-```php
-$SmsDev->setDateFormat('Y-m-d H:i:s'); // default is 'U', timestamp
-```
-
-This affects the input format accepted by `dateFrom()`, `dateTo()` and `dateBetween()`. Dates returned by `fetch()` are typed `\DateTimeInterface` objects instead, see [Parsing the response](#parsing-the-response).
-
 ### Sending an SMS message
 
 ```php
@@ -116,47 +108,61 @@ $SmsDev->setNumberValidation(false); // disables phone number validation
 
 Every received message is a reply to a message previously sent. You need either the message id or the reference code in order to link the responses with the original message being replied to.
 
+Search filters are built with `\enricodias\SmsDev\Filter\Filter`, a fluent builder passed into `setFilter()`. Calling `fetch()` with no filter set returns all messages. The filter is reset after every `fetch()` call.
+
 #### Get only unread response messages:
 
 ```php
-$SmsDev->setFilter()
-            ->isUnread()
-        ->fetch();
+use enricodias\SmsDev\Filter\Filter;
+
+$SmsDev->setFilter(
+    Filter::create()
+        ->isUnread()
+)->fetch();
 ```
 
 #### Get response messages in a specific date interval:
 
+`Filter::setDateFormat()` sets the input format accepted by `dateFrom()`, `dateTo()` and `dateBetween()` (default is `'U'`, timestamp). Dates returned by `fetch()` are typed `\DateTimeInterface` objects instead, see [Parsing the response](#parsing-the-response).
+
 The following date filters are equivalent:
 
 ```php
-$SmsDev->setDateFormat('Y-m-d');
+$SmsDev->setFilter(
+    Filter::create()
+        ->setDateFormat('Y-m-d')
+        ->dateBetween('2018-01-19', '2019-01-19')
+)->fetch();
 
-$SmsDev->setFilter()
-            ->dateBetween('2018-01-19', '2019-01-19')
-        ->fetch();
+$SmsDev->setFilter(
+    Filter::create()
+        ->setDateFormat('Y-m-d')
+        ->dateBetween('2018-01-19', '')
+        ->dateTo('2019-01-19')
+)->fetch();
 
-$SmsDev->setFilter()
-            ->dateBetween('2018-01-19', '')
-            ->dateTo('2019-01-19')
-        ->fetch();
+$SmsDev->setFilter(
+    Filter::create()
+        ->setDateFormat('Y-m-d')
+        ->dateBetween('', '2019-01-19')
+        ->dateFrom('2018-01-19')
+)->fetch();
 
-$SmsDev->setFilter()
-            ->dateBetween('', '2019-01-19')
-            ->dateFrom('2018-01-19')
-        ->fetch();
-
-$SmsDev->setFilter()
-            ->dateFrom('2018-01-19')
-            ->dateTo('2019-01-19')
-        ->fetch();
+$SmsDev->setFilter(
+    Filter::create()
+        ->setDateFormat('Y-m-d')
+        ->dateFrom('2018-01-19')
+        ->dateTo('2019-01-19')
+)->fetch();
 ```
 
 #### Search for a specific message id:
 
 ```php
-$SmsDev->setFilter()
-            ->byId(2515974)
-        ->fetch();
+$SmsDev->setFilter(
+    Filter::create()
+        ->byId(2515974)
+)->fetch();
 ```
 
 ### Parsing responses

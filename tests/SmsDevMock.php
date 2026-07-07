@@ -29,6 +29,7 @@ abstract class SmsDevMock extends TestCase
 
         $mock = new MockHandler([
             new Response(200, [], $apiResponse),
+            new Response(200, [], $apiResponse),
         ]);
 
         $history = Middleware::history($this->_container);
@@ -48,9 +49,9 @@ abstract class SmsDevMock extends TestCase
         return $this->_container[0]['request']->getUri()->getPath();
     }
 
-    public function getRequestBody()
+    public function getRequestBody(int $index = 0)
     {
-        return \json_decode($this->_container[0]['request']->getBody()->getContents());
+        return \json_decode($this->_container[$index]['request']->getBody()->getContents());
     }
 
     public function getLogger(): TestLogger

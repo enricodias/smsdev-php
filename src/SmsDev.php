@@ -10,6 +10,7 @@ use enricodias\SmsDev\Http\RequestBuilder;
 use enricodias\SmsDev\Result\Balance;
 use enricodias\SmsDev\Result\ResponseMessage;
 use enricodias\SmsDev\Result\SendResult;
+use enricodias\SmsDev\Filter\Filter;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;
@@ -52,22 +53,11 @@ class SmsDev
     private $apiTimeZone;
 
     /**
-     * Date format to be used in all date functions.
+     * Search filter used by fetch().
      *
-     * @var string
+     * @var Filter
      */
-    private $dateFormat = 'U';
-
-    /**
-     * Query string to be sent to the API as a search filter.
-     *
-     * The default 'status' = 1 will return all received messages.
-     *
-     * @var array
-     */
-    private $query = [
-        'status' => 1
-    ];
+    private $filter;
 
     /**
      * Raw API response.
@@ -119,6 +109,7 @@ class SmsDev
     ) {
         $this->apiKey = $apiKey;
         $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
+        $this->filter = new Filter();
 
         $httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
         $requestFactory = $requestFactory !== null ? $requestFactory : Psr17FactoryDiscovery::findRequestFactory();
@@ -236,95 +227,19 @@ class SmsDev
     }
 
     /**
-     * Sets the date format to be used in all date functions.
-     *
-     * @param string $dateFormat A valid date format (ex: Y-m-d).
+     * Sets the search filter to be used by fetch().
      */
-    public function setDateFormat(string $dateFormat): self
+    public function setFilter(Filter $filter): self
     {
-        $this->dateFormat = $dateFormat;
+        $this->filter = $filter;
 
         return $this;
     }
 
     /**
-     * Resets the search filter.
-     */
-    public function setFilter(): self
-    {
-        $this->query = [
-            'status' => 1,
-        ];
-
-        return $this;
-    }
-
-    /**
-     * Sets the search filter to return unread messages only.
-     */
-    public function isUnread(): self
-    {
-        $this->query['status'] = 0;
-
-        return $this;
-    }
-
-    /**
-     * Sets the search filter to return a message with a specific id.
+     * Query the API for received messages using the search filter set by setFilter().
      *
-     * @return SmsDev
-     */
-    public function byId(int $id): self
-    {
-        if ($id > 0) {
-            $this->query['id'] = $id;
-        }
-
-        return $this;
-    }
-
-    /**
-     * Sets the search filter to return messages older than a specific date.
-     *
-     * @param string $date
-     *
-     * @return SmsDev
-     */
-    public function dateFrom(string $date): self
-    {
-        return $this->parseDate('date_from', $date);
-    }
-
-    /**
-     * Sets the search filter to return messages newer than a specific date.
-     *
-     * @param string $date
-     *
-     * @return SmsDev
-     */
-    public function dateTo(string $date): self
-    {
-        return $this->parseDate('date_to', $date);
-    }
-
-    /**
-     * Sets the search filter to return messages between a specific date interval.
-     *
-     * @param string $dateFrom
-     * @param string $dateTo
-     *
-     * @return SmsDev
-     */
-    public function dateBetween(string $dateFrom, string $dateTo): self
-    {
-        return $this->dateFrom($dateFrom)->dateTo($dateTo);
-    }
-
-    /**
-     * Query the API for received messages using search filters.
-     *
-     * @see SmsDev::$query Search filters.
-     * @see SmsDev::$_result API response.
+     * @see SmsDev::setFilter() Search filter.
      *
      * @return ResponseMessage[] List of received messages.
      *
@@ -335,19 +250,20 @@ class SmsDev
     {
         $this->_result = [];
 
-        $this->query['key'] = $this->apiKey;
+        $query = $this->filter->toArray();
+        $query['key'] = $this->apiKey;
 
-        $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/inbox', $this->query);
+        $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/inbox', $query);
 
         $this->_result = $this->apiClient->send($request);
 
-        // resets the filters
-        $this->setFilter();
+        // resets the filter to the default (all messages)
+        $this->filter = new Filter();
 
         $messages = $this->buildResponseMessages($this->_result);
 
         $this->logger->info('Messages fetched.', [
-            'filters' => $this->query,
+            'filters' => $query,
             'count' => \count($messages),
         ]);
 
@@ -463,29 +379,5 @@ class SmsDev
         }
 
         return (int) $number;
-    }
-
-    /**
-     * Convert a date to format supported by the API.
-     *
-     * The API requires the date format d/m/Y, but in this class any valid date format is supported.
-     * Since the API is always using the timezone America/Sao_Paulo, this function must also do timezone conversions.
-     *
-     * @see SmsDev::$dateFormat Date format to be used in all date functions.
-     *
-     * @param string $key The filter key to be set as a search filter.
-     * @param string $date
-     */
-    private function parseDate(string $key, string $date): self
-    {
-        $parsedDate = \DateTime::createFromFormat($this->dateFormat, $date);
-
-        if ($parsedDate !== false) {
-            $parsedDate->setTimezone($this->apiTimeZone);
-
-            $this->query[$key] = $parsedDate->format('d/m/Y');
-        }
-
-        return $this;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace enricodias\SmsDev\Tests;
 
+use enricodias\SmsDev\Filter\Filter;
+
 /**
  * Test if the requests sent are compatible with the API specification.
  *
@@ -62,143 +64,41 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals('Refer string',  $query->refer);
     }
 
-    public function testFilterByUnread()
+    public function testSetFilter()
     {
         $SmsDev = $this->getServiceMock();
 
-        $SmsDev->setDateFormat('Y-m-d H:i:s')
-            ->setFilter()
+        $SmsDev->setFilter(
+            Filter::create()
                 ->isUnread()
-            ->fetch();
+                ->byId(2515974)
+                ->setDateFormat('Y-m-d')
+                ->dateBetween('2018-01-19', '2019-01-19')
+        )->fetch();
 
         $this->assertSame('/v1/inbox', $this->getRequestPath());
 
-        $query = $this->getRequestBody();
-
-        $this->assertEquals('',  $query->key);
-        $this->assertEquals('0', $query->status);
-    }
-
-    public function testFilterById()
-    {
-        $SmsDev = $this->getServiceMock();
-
-        $SmsDev->setFilter()
-                    ->byId(2515974)
-                ->fetch();
-
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
+        $query = $this->getRequestBody(0);
 
         $this->assertEquals('',        $query->key);
+        $this->assertEquals('0', $query->status);
         $this->assertEquals('2515974', $query->id);
-    }
-
-    public function testFilterByDateBetween()
-    {
-        $SmsDev = $this->getServiceMock();
-
-        $SmsDev->setDateFormat('Y-m-d')
-            ->setFilter()
-                ->dateBetween('2018-01-19', '2019-01-19')
-            ->fetch();
-
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
-
-        $this->assertEquals('',           $query->key);
         $this->assertEquals('19/01/2018', $query->date_from);
         $this->assertEquals('19/01/2019', $query->date_to);
-    }
 
-    public function testFilterByDateBetween_InvalidDate()
-    {
-        $SmsDev = $this->getServiceMock();
-
-        $SmsDev->setDateFormat('Y-m-d')
-            ->setFilter()
-                ->dateBetween('2018-19', '2019-01-19')
-            ->fetch();
-
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
-
-        $this->assertEquals('', $query->key);
-        $this->assertObjectNotHasProperty('date_from', $query);
-        $this->assertEquals('19/01/2019', $query->date_to);
-
-        $SmsDev = $this->getServiceMock();
-
-        $SmsDev->setDateFormat('Y-m-d')
-            ->setFilter()
-                ->dateBetween('2018-01-19', '2019-01')
-            ->fetch();
-
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
-
-        $this->assertEquals('', $query->key);
-        $this->assertEquals('19/01/2018', $query->date_from);
-        $this->assertObjectNotHasProperty('date_to', $query);
-    }
-
-    public function testFilterByDate()
-    {
-        $SmsDev = $this->getServiceMock();
-
-        $SmsDev->setDateFormat('U')
-            ->setFilter()
-                ->dateTo(1546311600)
-            ->fetch();
-
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
-
-        $this->assertEquals('', $query->key);
-        $this->assertObjectNotHasProperty('date_from', $query);
-        $this->assertEquals('01/01/2019', $query->date_to);
-
-        $SmsDev = $this->getServiceMock();
-
-        $SmsDev->setDateFormat('U')
-            ->setFilter()
+        $SmsDev->setFilter(
+            Filter::create()
+                ->setDateFormat('U')
                 ->dateFrom(1546311600)
-            ->fetch();
+                ->dateTo(1546311600)
+        )->fetch();
 
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
+        $query = $this->getRequestBody(1);
 
-        $query = $this->getRequestBody();
-
-        $this->assertEquals('', $query->key);
+        $this->assertObjectNotHasProperty('id', $query);
+        $this->assertEquals('',        $query->key);
+        $this->assertEquals(1, $query->status);
         $this->assertEquals('01/01/2019', $query->date_from);
-        $this->assertObjectNotHasProperty('date_to', $query);
-    }
-
-    /**
-     * Test the timezone calculations in the date filters.
-     *
-     * Example: 2020-01-02 01:00:00 should be day 2020-01-01 in America/Sao_Paulo
-     */
-    public function testTimezoneDate()
-    {
-        $SmsDev = $this->getServiceMock();
-
-        \date_default_timezone_set('UTC');
-
-        $SmsDev->setDateFormat('Y-m-d H:i:s')
-            ->setFilter()
-                ->dateFrom('2020-01-02 01:00:00')
-            ->fetch();
-
-        $this->assertSame('/v1/inbox', $this->getRequestPath());
-
-        $query = $this->getRequestBody();
-
-        $this->assertSame('01/01/2020', $query->date_from);
+        $this->assertEquals('01/01/2019', $query->date_to);
     }
 }

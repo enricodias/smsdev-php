@@ -3,6 +3,7 @@
 namespace enricodias\SmsDev\Tests;
 
 use enricodias\SmsDev\Exceptions\ApiException;
+use enricodias\SmsDev\Filter\Filter;
 
 /**
  * Test if the class can parse the API responses correctly.
@@ -92,10 +93,10 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $messages = $SmsDev->setDateFormat('Y-m-d H:i:s')
-            ->setFilter()
+        $messages = $SmsDev->setFilter(
+            Filter::create()
                 ->isUnread()
-            ->fetch();
+        )->fetch();
 
         $message = $messages[0];
 
@@ -112,10 +113,10 @@ final class ApiResponseTest extends SmsDevMock
     {
         $SmsDev = $this->getServiceMock('{}');
 
-        $messages = $SmsDev->setDateFormat('Y-m-d H:i:s')
-            ->setFilter()
+        $messages = $SmsDev->setFilter(
+            Filter::create()
                 ->isUnread()
-            ->fetch();
+        )->fetch();
 
         $this->assertEmpty($SmsDev->getResult());
         $this->assertEmpty($messages);
@@ -127,9 +128,10 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $messages = $SmsDev->setFilter()
-                    ->byId(2515974)
-                ->fetch();
+        $messages = $SmsDev->setFilter(
+            Filter::create()
+                ->byId(2515974)
+        )->fetch();
 
         $this->assertSame(2515974, (int) $messages[0]->getIdSmsRead());
     }
@@ -140,9 +142,10 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $messages = $SmsDev->setFilter()
-                    ->byId(2515974)
-                ->fetch();
+        $messages = $SmsDev->setFilter(
+            Filter::create()
+                ->byId(2515974)
+        )->fetch();
 
         $this->assertEmpty($messages);
     }
@@ -153,11 +156,12 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $messages = $SmsDev->setDateFormat('U')
-            ->setFilter()
+        $messages = $SmsDev->setFilter(
+            Filter::create()
+                ->setDateFormat('U')
                 ->dateFrom(1516330800)
                 ->dateTo(1559444399)
-            ->fetch();
+        )->fetch();
 
         $message = $messages[0];
 
@@ -172,7 +176,7 @@ final class ApiResponseTest extends SmsDevMock
 
         $SmsDev = $this->getServiceMock($apiResponse);
 
-        $messages = $SmsDev->setDateFormat('Y-m-d H:i:s')->fetch();
+        $messages = $SmsDev->fetch();
 
         $this->assertEmpty($messages);
     }

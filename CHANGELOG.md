@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file, in reverse 
 - `Result\SendResult`, `Result\Balance` and `Result\ResponseMessage` typed response objects
 - `Balance::getFormattedBalance()`, the balance formatted as Brazilian currency (ex: "R$ 1,23")
 - `Exceptions\ApiException`, carrying the API's code and description fields
+- `Filter\Filter`, a fluent search filter builder for `fetch()`
 
 #### Changed
 - Moved `SmsDev` into the `enricodias\SmsDev` namespace
@@ -18,10 +19,14 @@ All notable changes to this project will be documented in this file, in reverse 
 - `fetch()` now returns an array of `ResponseMessage` instead of `bool`
 - `SmsDev::getBalance()` now returns a `Balance` instead of `int`, and throws `ApiException` instead
   of returning `0` on failure
+- `SmsDev::setFilter()` now accepts a built `Filter\Filter` instance instead of owning the filter
+  state itself, e.g. `$smsDev->setFilter(Filter::create()->isUnread())`
 
 #### Removed
 - PHP 5.6 compactibility
 - `SmsDev::parsedMessages()`, replaced by the `ResponseMessage` array returned by `SmsDev::fetch()`
+- `SmsDev::setDateFormat()`, `isUnread()`, `byId()`, `dateFrom()`, `dateTo()` and `dateBetween()`,
+  replaced by the equivalent methods on `Filter\Filter`
 
 ## 0.4
 
