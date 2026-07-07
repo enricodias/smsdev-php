@@ -9,8 +9,8 @@ use enricodias\SmsDev\Exceptions\TransportException;
 use enricodias\SmsDev\Http\ApiClient;
 use enricodias\SmsDev\Http\RequestBuilder;
 use enricodias\SmsDev\Result\Balance;
+use enricodias\SmsDev\Result\MessageResult;
 use enricodias\SmsDev\Result\ResponseMessage;
-use enricodias\SmsDev\Result\SendResult;
 use enricodias\SmsDev\Filter\Filter;
 use enricodias\SmsDev\Validator\PhoneNumberValidator;
 use Http\Discovery\Psr17FactoryDiscovery;
@@ -139,9 +139,9 @@ class SmsDev
      * @param string $message
      * @param string|null $refer (optional) User reference for message identification.
      *
-     * @return SendResult[] One SendResult per recipient. A single message still returns a
-     *                      one-element array. Per-item failures are reported on the
-     *                      SendResult itself, they do not throw.
+     * @return MessageResult[] One MessageResult per recipient. A single message still returns a
+     *                         one-element array. Per-item failures are reported on the
+     *                         MessageResult itself, they do not throw.
      *
      * @throws InvalidPhoneNumberException If phone number validation is enabled and the number is invalid.
      * @throws TransportException If the PSR-18 client fails to send the request.
@@ -177,7 +177,7 @@ class SmsDev
 
         $this->_result = $this->apiClient->send($request);
 
-        $results = $this->buildSendResults($this->_result);
+        $results = $this->buildMessageResults($this->_result);
 
         $firstResult = $results[0] ?? null;
 
@@ -201,19 +201,66 @@ class SmsDev
     }
 
     /**
-     * Normalizes a send() style response into an array of SendResult.
+     * Cancel a previously queued message.
+     *
+     * Only works while the message status is still queued, before dispatch.
+     *
+     * @param int|string|array $id Message id, or an array of ids to cancel multiple messages.
+     *
+     * @return MessageResult[] One MessageResult per id. A single id still returns a
+     *                         one-element array. Per-item failures are reported on the
+     *                         MessageResult itself, they do not throw.
+     *
+     * @throws TransportException If the PSR-18 client fails to send the request.
+     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     */
+    public function cancel($id): array
+    {
+        $this->_result = [];
+
+        $params = [
+            'key' => $this->apiKey,
+            'id'  => $id,
+        ];
+
+        $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/cancel', $params);
+
+        $this->_result = $this->apiClient->send($request);
+
+        $results = $this->buildMessageResults($this->_result);
+
+        $firstResult = $results[0] ?? null;
+
+        if ($firstResult === null || !$firstResult->isSuccess()) {
+            $this->logger->error('Failed to cancel message.', [
+                'id'     => $id,
+                'result' => $this->_result,
+            ]);
+
+            return $results;
+        }
+
+        $this->logger->info('Message cancelled.', [
+            'id' => $id,
+        ]);
+
+        return $results;
+    }
+
+    /**
+     * Normalizes a send() or cancel() style response into an array of MessageResult.
      *
      * The API returns a bare object when there is exactly one item in the response, and
      * only wraps results in an array when there is more than one item.
      *
      * @param array $result
      *
-     * @return SendResult[]
+     * @return MessageResult[]
      */
-    private function buildSendResults(array $result): array
+    private function buildMessageResults(array $result): array
     {
         if (\array_key_exists('situacao', $result)) {
-            return [SendResult::fromArray($result)];
+            return [MessageResult::fromArray($result)];
         }
 
         $results = [];
@@ -223,7 +270,7 @@ class SmsDev
                 continue;
             }
 
-            $results[] = SendResult::fromArray($item);
+            $results[] = MessageResult::fromArray($item);
         }
 
         return $results;

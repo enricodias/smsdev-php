@@ -64,6 +64,34 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals('Refer string',  $query->refer);
     }
 
+    public function testCancel()
+    {
+        $SmsDev = $this->getServiceMock('{"situacao": "OK"}');
+
+        $SmsDev->cancel(9999999);
+
+        $this->assertSame('/v1/cancel', $this->getRequestPath());
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('', $query->key);
+        $this->assertEquals(9999999, $query->id);
+    }
+
+    public function testCancelWithMultipleIds()
+    {
+        $SmsDev = $this->getServiceMock('[{"situacao": "OK"}]');
+
+        $SmsDev->cancel([9999999, 8888888]);
+
+        $this->assertSame('/v1/cancel', $this->getRequestPath());
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('', $query->key);
+        $this->assertEquals([9999999, 8888888], $query->id);
+    }
+
     public function testSetFilter()
     {
         $SmsDev = $this->getServiceMock();

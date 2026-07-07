@@ -3,13 +3,16 @@
 namespace enricodias\SmsDev\Result;
 
 /**
- * One item of a send() response.
+ * One item of a send() or cancel() response.
+ *
+ * Both endpoints are grouped by the API as MT (Mobile Terminated) operations and share
+ * the exact same response shape.
  */
-class SendResult implements \JsonSerializable
+class MessageResult implements \JsonSerializable
 {
     /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
+     * "OK" - Successful operation
+     * "ERROR" - Operation with error
      *
      * @var string
      */
@@ -23,7 +26,7 @@ class SendResult implements \JsonSerializable
     private $codigo;
 
     /**
-     * Unique ID of the sent message.
+     * Unique ID of the message.
      *
      * @var string
      */
@@ -49,7 +52,7 @@ class SendResult implements \JsonSerializable
     }
 
     /**
-     * Builds a SendResult from a decoded API response item.
+     * Builds a MessageResult from a decoded API response item.
      *
      * @param array $data
      */
@@ -72,8 +75,8 @@ class SendResult implements \JsonSerializable
     }
 
     /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
+     * "OK" - Successful operation
+     * "ERROR" - Operation with error
      */
     public function getSituacao(): string
     {
@@ -89,7 +92,7 @@ class SendResult implements \JsonSerializable
     }
 
     /**
-     * Unique ID of the sent message.
+     * Unique ID of the message.
      */
     public function getId(): ?string
     {

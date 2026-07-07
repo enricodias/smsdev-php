@@ -75,7 +75,7 @@ When no logger is provided, a `Psr\Log\NullLogger` is used and no logs are recor
 ### Sending an SMS message
 
 ```php
-$results = $SmsDev->send('5511988881111', 'SMS Message', 'Reference Code'); // returns an array of SendResult, one per recipient
+$results = $SmsDev->send('5511988881111', 'SMS Message', 'Reference Code'); // returns an array of MessageResult, one per recipient
 
 foreach ($results as $result) {
     if ($result->isSuccess()) {
@@ -90,7 +90,7 @@ foreach ($results as $result) {
 var_dump($SmsDev->getResult()); // Returns the raw API response.
 ```
 
-A single message still returns a one-element array. Per-item failures are reported on each `SendResult`.
+A single message still returns a one-element array. Per-item failures are reported on each `MessageResult`.
 
 The country code optional. The default is 55 (Brazil).
 
@@ -105,6 +105,30 @@ $SmsDev->setNumberValidation(false); // disables phone number validation
 ```
 
 > **SmsDev will charge you for messages sent to invalid numbers.**
+
+### Cancelling a message
+
+A queued message can be cancelled while it has not been dispatched yet:
+
+```php
+$results = $SmsDev->cancel(637849052); // returns an array of MessageResult, one per id
+
+foreach ($results as $result) {
+    if ($result->isSuccess()) {
+        continue;
+    }
+
+    echo $result->getDescricao(); // API error message
+}
+```
+
+A single id still returns a one-element array. Per-item failures are reported on each `MessageResult`.
+
+Multiple messages can be cancelled in a single request by passing an array of ids:
+
+```php
+$results = $SmsDev->cancel([637849052, 637849053]);
+```
 
 ### Receiving SMS messages
 

@@ -88,6 +88,49 @@ final class ApiResponseTest extends SmsDevMock
         ];
     }
 
+    /**
+     * @dataProvider cancelDataProvider
+     */
+    public function testCancel($id, $expectedCount, $expectedSuccess, $apiResponse)
+    {
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $results = $SmsDev->cancel($id);
+
+        $this->assertCount($expectedCount, $results);
+        $this->assertSame($expectedSuccess, $results[0]->isSuccess());
+
+        if ($expectedSuccess) {
+            $this->assertTrue($this->getLogger()->hasRecord('info', 'Message cancelled.'));
+            return;
+        }
+
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to cancel message.'));
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function cancelDataProvider()
+    {
+        return [
+            // id,                     expectedCount, expectedSuccess, apiResponse
+            [ 9999999,                 1,             true,            '{"situacao":"OK","codigo":"1","id":"9999999","descricao":"MENSAGEM CANCELADA COM SUCESSO"}' ],
+            [ 9999999,                 1,             false,           '{"situacao":"ERRO","codigo":"400","descricao":"MENSAGEM NAO ENCONTRADA."}' ],
+            [ [9999999, 8888888],      2,             true,            '[{"situacao":"OK","codigo":"1","id":"9999999","descricao":"MENSAGEM CANCELADA COM SUCESSO"},{"situacao":"OK","codigo":"1","id":"8888888","descricao":"MENSAGEM CANCELADA COM SUCESSO"}]' ],
+        ];
+    }
+
+    public function testCancel_EmptyResponse()
+    {
+        $SmsDev = $this->getServiceMock('{}');
+
+        $results = $SmsDev->cancel(9999999);
+
+        $this->assertEmpty($results);
+        $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to cancel message.'));
+    }
+
     public function testPhoneNumberValidator()
     {
         $SmsDev = $this->getServiceMock('{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }');
