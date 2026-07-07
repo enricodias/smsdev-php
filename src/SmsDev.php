@@ -3,6 +3,7 @@
 namespace enricodias\SmsDev;
 
 use enricodias\SmsDev\Exceptions\ApiException;
+use enricodias\SmsDev\Exceptions\InvalidPhoneNumberException;
 use enricodias\SmsDev\Exceptions\InvalidResponseException;
 use enricodias\SmsDev\Exceptions\TransportException;
 use enricodias\SmsDev\Http\ApiClient;
@@ -11,6 +12,7 @@ use enricodias\SmsDev\Result\Balance;
 use enricodias\SmsDev\Result\ResponseMessage;
 use enricodias\SmsDev\Result\SendResult;
 use enricodias\SmsDev\Filter\Filter;
+use enricodias\SmsDev\Validator\PhoneNumberValidator;
 use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Discovery\Psr18ClientDiscovery;
 use Psr\Http\Client\ClientInterface;
@@ -88,6 +90,13 @@ class SmsDev
     private $logger;
 
     /**
+     * Validates and normalizes phone numbers before sending, when enabled.
+     *
+     * @var PhoneNumberValidator
+     */
+    private $phoneNumberValidator;
+
+    /**
      * Creates a new SmsDev instance with an API key and sets the default API timezone.
      *
      * The HTTP client and PSR-17 factories are optional. When not provided, they are resolved
@@ -118,6 +127,7 @@ class SmsDev
 
         $this->requestBuilder = new RequestBuilder($requestFactory, $streamFactory);
         $this->apiClient = new ApiClient($httpClient, $this->logger);
+        $this->phoneNumberValidator = new PhoneNumberValidator();
     }
 
     /**
@@ -133,6 +143,7 @@ class SmsDev
      *                      one-element array. Per-item failures are reported on the
      *                      SendResult itself, they do not throw.
      *
+     * @throws InvalidPhoneNumberException If phone number validation is enabled and the number is invalid.
      * @throws TransportException If the PSR-18 client fails to send the request.
      * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
      */
@@ -142,14 +153,14 @@ class SmsDev
 
         if ($this->numberValidation) {
             try {
-                $number = $this->validatePhoneNumber($number);
-            } catch (\Throwable $e) {
+                $number = (string) $this->phoneNumberValidator->validate($number);
+            } catch (InvalidPhoneNumberException $e) {
                 $this->logger->warning('Invalid phone number.', [
                     'number' => $number,
                     'reason' => $e->getMessage(),
                 ]);
 
-                return [];
+                throw $e;
             }
         }
 
@@ -349,35 +360,5 @@ class SmsDev
     public function getResult(): array
     {
         return $this->_result;
-    }
-
-    /**
-     * Verifies if a phone number is valid.
-     *
-     * @see https://github.com/giggsey/libphonenumber-for-php libphonenumber for PHP repository.
-     *
-     * @param string|null $number
-     *
-     * @return int A valid mobile phone number.
-     *
-     * @throws \libphonenumber\NumberParseException If the number is not valid.
-     * @throws \Exception If the number is not a valid brazilian mobile number.
-     */
-    private function validatePhoneNumber(?string $number): int
-    {
-        if (\class_exists('\libphonenumber\PhoneNumberUtil') === true) {
-            $phoneNumberUtil = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberUtil::getInstance();
-            $mobilePhoneNumber = /** @scrutinizer ignore-call */ \libphonenumber\PhoneNumberType::MOBILE;
-
-            $phoneNumberObject = $phoneNumberUtil->parse($number, 'BR');
-
-            if ($phoneNumberUtil->isValidNumber($phoneNumberObject) === false || $phoneNumberUtil->getNumberType($phoneNumberObject) !== $mobilePhoneNumber) {
-                throw new \Exception('Invalid phone number.');
-            }
-
-            $number = $phoneNumberObject->getCountryCode().$phoneNumberObject->getNationalNumber();
-        }
-
-        return (int) $number;
     }
 }

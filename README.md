@@ -90,13 +90,15 @@ foreach ($results as $result) {
 var_dump($SmsDev->getResult()); // Returns the raw API response.
 ```
 
-A single message still returns a one-element array. Per-item failures are reported on each `SendResult`, `send()` only throws on a total transport/parse failure (see `TransportException` and `InvalidResponseException`).
+A single message still returns a one-element array. Per-item failures are reported on each `SendResult`.
 
 The country code optional. The default is 55 (Brazil).
 
 #### Phone number validation
 
-If you have the package [giggsey/libphonenumber-for-php](https://github.com/giggsey/libphonenumber-for-php) installed, it will be used to validate numbers locally. You can disable this feature with the method `setNumberValidation` before sending:
+If you have the package [giggsey/libphonenumber-for-php](https://github.com/giggsey/libphonenumber-for-php) installed, it will be used to validate numbers locally. `SmsDev::send()` throws `InvalidPhoneNumberException` when the number is invalid, instead of sending the request.
+
+You can disable this feature with the method `setNumberValidation` before sending:
 
 ```php
 $SmsDev->setNumberValidation(false); // disables phone number validation

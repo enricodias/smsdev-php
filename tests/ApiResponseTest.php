@@ -3,6 +3,7 @@
 namespace enricodias\SmsDev\Tests;
 
 use enricodias\SmsDev\Exceptions\ApiException;
+use enricodias\SmsDev\Exceptions\InvalidPhoneNumberException;
 use enricodias\SmsDev\Filter\Filter;
 
 /**
@@ -85,6 +86,28 @@ final class ApiResponseTest extends SmsDevMock
             [ 'abc',          'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}' ],
             [ '',             'Message',    'Refer',    false,              '{"situacao":"ERRO","codigo":"402","refer": "Refer","descricao":"SEM NUMERO DESTINATARIO."}'],
         ];
+    }
+
+    public function testPhoneNumberValidator()
+    {
+        $SmsDev = $this->getServiceMock('{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }');
+
+        $results = $SmsDev->send(5511988887777, 'Message');
+
+        $this->assertCount(1, $results);
+        $this->assertTrue($results[0]->isSuccess());
+
+        $this->assertTrue($this->getLogger()->hasRecord('info', 'SMS message sent.'));
+
+        try {
+            $results = $SmsDev->send(1234, 'Message');
+
+            // giggsey/libphonenumber-for-php is not installed locally: the number is sent as-is and rejected by the API mock instead.
+            $this->assertEmpty($results);
+            $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
+        } catch (InvalidPhoneNumberException $e) {
+            $this->assertTrue($this->getLogger()->hasRecord('warning', 'Invalid phone number.'));
+        }
     }
 
     public function testFilterByUnread()

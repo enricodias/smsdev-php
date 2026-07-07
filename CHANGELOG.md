@@ -11,6 +11,9 @@ All notable changes to this project will be documented in this file, in reverse 
 - `Balance::getFormattedBalance()`, the balance formatted as Brazilian currency (ex: "R$ 1,23")
 - `Exceptions\ApiException`, carrying the API's code and description fields
 - `Filter\Filter`, a fluent search filter builder for `fetch()`
+- `Validator\PhoneNumberValidator`, extracted from `SmsDev`
+- `Exceptions\InvalidPhoneNumberException`, thrown by `send()` when phone number validation is
+  enabled and rejects the number
 
 #### Changed
 - Moved `SmsDev` into the `enricodias\SmsDev` namespace
@@ -21,12 +24,15 @@ All notable changes to this project will be documented in this file, in reverse 
   of returning `0` on failure
 - `SmsDev::setFilter()` now accepts a built `Filter\Filter` instance instead of owning the filter
   state itself, e.g. `$smsDev->setFilter(Filter::create()->isUnread())`
+- `SmsDev::send()` now throws `InvalidPhoneNumberException` on a local validation failure instead
+  of silently returning an empty array
 
 #### Removed
 - PHP 5.6 compactibility
 - `SmsDev::parsedMessages()`, replaced by the `ResponseMessage` array returned by `SmsDev::fetch()`
 - `SmsDev::setDateFormat()`, `isUnread()`, `byId()`, `dateFrom()`, `dateTo()` and `dateBetween()`,
   replaced by the equivalent methods on `Filter\Filter`
+- `SmsDev::validatePhoneNumber()`, replaced by `PhoneNumber\PhoneNumberValidator`
 
 ## 0.4
 
