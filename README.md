@@ -130,6 +130,22 @@ Multiple messages can be cancelled in a single request by passing an array of id
 $results = $SmsDev->cancel([637849052, 637849053]);
 ```
 
+### Checking a message status
+
+The delivery status (DLR) of a previously sent message can be queried using its id:
+
+```php
+$status = $SmsDev->getStatus(637849052);
+
+echo $status->getDescricao(); // delivery status: RECEBIDA, ENVIADA, FILA, CANCELADA, BLACK LIST, APROVACAO or ERRO
+echo $status->getOperadora(); // carrier of the recipient phone
+echo $status->getDataEnvio()->format('Y-m-d H:i:s'); // \DateTimeInterface, already converted to the local timezone
+```
+
+`getStatus()` throws `ApiException` if the query itself fails, e.g. an invalid or unknown id.
+
+> Only a single id is supported since the API's documented response for this endpoint doesn't return an id field to correlate multiple results back to specific ids.
+
 ### Receiving SMS messages
 
 Every received message is a reply to a message previously sent. You need either the message id or the reference code in order to link the responses with the original message being replied to.
@@ -232,5 +248,4 @@ This class solves this problem by automatically correcting dates both in search 
 
 ## TODO
 
-- Check the status of sent messages.
 - Send multiple SMS messages.

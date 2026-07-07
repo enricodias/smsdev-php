@@ -18,6 +18,9 @@ All notable changes to this project will be documented in this file, in reverse 
   enabled and rejects the number
 - `SmsDev::cancel()`, cancelling a previously queued message. Accepts one id or an array of ids,
   returns an array of `MessageResult` (single item normalized into a one-element array)
+- `Result\StatusResult` and `SmsDev::getStatus()`, querying the delivery status (DLR) of a
+  previously sent message. Only a single id is supported since the API's documented
+  response does not include an id field to correlate multiple results back to specific ids
 
 #### Changed
 - Moved `SmsDev` into the `enricodias\SmsDev` namespace

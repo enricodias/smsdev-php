@@ -11,6 +11,7 @@ use enricodias\SmsDev\Http\RequestBuilder;
 use enricodias\SmsDev\Result\Balance;
 use enricodias\SmsDev\Result\MessageResult;
 use enricodias\SmsDev\Result\ResponseMessage;
+use enricodias\SmsDev\Result\StatusResult;
 use enricodias\SmsDev\Filter\Filter;
 use enricodias\SmsDev\Validator\PhoneNumberValidator;
 use Http\Discovery\Psr17FactoryDiscovery;
@@ -339,8 +340,6 @@ class SmsDev
      */
     private function buildResponseMessages(array $result): array
     {
-        $localTimeZone = new \DateTimeZone(\date_default_timezone_get());
-
         $messages = [];
 
         foreach ($result as $item) {
@@ -348,12 +347,7 @@ class SmsDev
                 continue;
             }
 
-            $dataRead = \DateTime::createFromFormat('d/m/Y H:i:s', $item['data_read'], $this->apiTimeZone);
-
-            if ($dataRead !== false) {
-                $dataRead->setTimezone($localTimeZone);
-                $item['data_read'] = $dataRead;
-            }
+            $item['data_read'] = $this->convertApiDate($item['data_read']);
 
             $messages[] = ResponseMessage::fromArray($item);
         }
@@ -362,9 +356,29 @@ class SmsDev
     }
 
     /**
-     * Get the current balance/credits.
+     * Converts a date string in the API's format (d/m/Y H:i:s, America/Sao_Paulo timezone)
+     * to a \DateTimeInterface in the local timezone.
      *
-     * @return Balance Current balance in BRL cents.
+     * @param string $value
+     *
+     * @return \DateTimeInterface|string Falls back to the original string if it's not a
+     *                                   valid date in the expected format.
+     */
+    private function convertApiDate(string $value)
+    {
+        $date = \DateTime::createFromFormat('d/m/Y H:i:s', $value, $this->apiTimeZone);
+
+        if (!$date) {
+            return $value;
+        }
+
+        $date->setTimezone(new \DateTimeZone(\date_default_timezone_get()));
+
+        return $date;
+    }
+
+    /**
+     * Get the current balance/credits.
      *
      * @throws TransportException If the PSR-18 client fails to send the request.
      * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
@@ -395,6 +409,61 @@ class SmsDev
         ]);
 
         return $balance;
+    }
+
+    /**
+     * Query the delivery status of a previously sent message.
+     *
+     * Only a single id is supported. The API's documented response for this endpoint does
+     * not include an id field, so there is currently no reliable way to correlate results
+     * back to specific ids when querying more than one at a time.
+     *
+     * @param int|string $id Message id, as returned by send().
+     *
+     * @return StatusResult
+     *
+     * @throws \InvalidArgumentException If an array of ids is passed.
+     * @throws TransportException If the PSR-18 client fails to send the request.
+     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws ApiException If the API reports a failure (situacao other than "OK").
+     */
+    public function getStatus($id): StatusResult
+    {
+        if (\is_array($id)) {
+            throw new \InvalidArgumentException('getStatus() only supports a single id.');
+        }
+
+        $this->_result = [];
+
+        $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/dlr', [
+            'key' => $this->apiKey,
+            'id'  => $id,
+        ]);
+
+        $this->_result = $this->apiClient->send($request);
+
+        $result = $this->_result;
+
+        if (\array_key_exists('data_envio', $result)) {
+            $result['data_envio'] = $this->convertApiDate($result['data_envio']);
+        }
+
+        $status = StatusResult::fromArray($result);
+
+        if (!$status->isSuccess()) {
+            $this->logger->error('Failed to fetch message status.', [
+                'id'     => $id,
+                'result' => $this->_result,
+            ]);
+
+            throw new ApiException('', $status->getDescricao() ?? '');
+        }
+
+        $this->logger->info('Message status fetched.', [
+            'id' => $id,
+        ]);
+
+        return $status;
     }
 
     /**

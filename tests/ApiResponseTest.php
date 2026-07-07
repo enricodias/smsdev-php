@@ -131,6 +131,47 @@ final class ApiResponseTest extends SmsDevMock
         $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to cancel message.'));
     }
 
+    public function testGetStatus()
+    {
+        $apiResponse = '{"situacao":"OK","codigo":"1","data_envio":"21\/10\/2019 11:08:58","operadora":"OI","descricao":"RECEBIDA"}';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $status = $SmsDev->getStatus(9999999);
+
+        $this->assertSame('2019-10-21 14:08:58', $status->getDataEnvio()->format('Y-m-d H:i:s')); // UTC conversion
+        $this->assertSame('OI', $status->getOperadora());
+        $this->assertSame('RECEBIDA', $status->getDescricao());
+
+        $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Message status fetched.', [
+            'id' => 9999999,
+        ]));
+    }
+
+    public function testGetStatus_EmptyResponse()
+    {
+        $apiResponse = '{}';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        try {
+            $SmsDev->getStatus(9999999);
+
+            $this->fail('Expected ApiException was not thrown.');
+        } catch (ApiException $e) {
+            $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch message status.'));
+        }
+    }
+
+    public function testGetStatus_ArrayIdThrows()
+    {
+        $SmsDev = $this->getServiceMock('{"situacao":"OK"}');
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $SmsDev->getStatus([9999999, 8888888]);
+    }
+
     public function testPhoneNumberValidator()
     {
         $SmsDev = $this->getServiceMock('{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }');

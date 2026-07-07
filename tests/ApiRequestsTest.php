@@ -92,6 +92,20 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals([9999999, 8888888], $query->id);
     }
 
+    public function testGetStatus()
+    {
+        $SmsDev = $this->getServiceMock('{"situacao": "OK"}');
+
+        $SmsDev->getStatus(9999999);
+
+        $this->assertSame('/v1/dlr', $this->getRequestPath());
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('', $query->key);
+        $this->assertEquals(9999999, $query->id);
+    }
+
     public function testSetFilter()
     {
         $SmsDev = $this->getServiceMock();
