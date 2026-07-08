@@ -234,6 +234,27 @@ $balance->saldoSms(); // 123
 $balance->getFormattedBalance(); // R$ 1,23
 ```
 
+### Getting a usage report
+
+A summarized usage report for a period can be retrieved with `SmsDev::getReport()`, using `\DateTimeInterface` objects for the period boundaries:
+
+```php
+$report = $SmsDev->getReport(
+    new \DateTimeImmutable('2020-01-01'),
+    new \DateTimeImmutable('2020-01-30')
+);
+
+echo $report->getDataInicio()->format('Y-m-d'); // \DateTimeInterface, already converted to the local timezone
+echo $report->getDataFim()->format('Y-m-d');    // \DateTimeInterface, already converted to the local timezone
+echo $report->getEnviada();    // messages sent in the period
+echo $report->getRecebida();   // messages received in the period
+echo $report->getBlacklist();  // messages blocked by the blacklist in the period
+echo $report->getCancelada();  // messages cancelled in the period
+echo $report->getQtdCredito(); // credits consumed in the period
+```
+
+`getReport()` throws `ApiException` if the query itself fails.
+
 ## Serialization
 
 All typed responses are `\JsonSerializable`.

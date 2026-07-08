@@ -10,6 +10,7 @@ use enricodias\SmsDev\Http\ApiClient;
 use enricodias\SmsDev\Http\RequestBuilder;
 use enricodias\SmsDev\Result\Balance;
 use enricodias\SmsDev\Result\MessageResult;
+use enricodias\SmsDev\Result\Report;
 use enricodias\SmsDev\Result\ResponseMessage;
 use enricodias\SmsDev\Result\StatusResult;
 use enricodias\SmsDev\Filter\Filter;
@@ -356,17 +357,21 @@ class SmsDev
     }
 
     /**
-     * Converts a date string in the API's format (d/m/Y H:i:s, America/Sao_Paulo timezone)
-     * to a \DateTimeInterface in the local timezone.
+     * Converts a date string in the API's format (America/Sao_Paulo timezone) to a
+     * \DateTimeInterface in the local timezone.
      *
      * @param string $value
+     * @param string $format Format accepted by \DateTime::createFromFormat(). Defaults to a
+     *                       full date and time. Pass a date-only format (e.g. '!d/m/Y') for
+     *                       fields that only carry a date, so unspecified time fields don't
+     *                       leak the current time into the parsed value.
      *
      * @return \DateTimeInterface|string Falls back to the original string if it's not a
      *                                   valid date in the expected format.
      */
-    private function convertApiDate(string $value)
+    private function convertApiDate(string $value, string $format = 'd/m/Y H:i:s')
     {
-        $date = \DateTime::createFromFormat('d/m/Y H:i:s', $value, $this->apiTimeZone);
+        $date = \DateTime::createFromFormat($format, $value, $this->apiTimeZone);
 
         if (!$date) {
             return $value;
@@ -464,6 +469,60 @@ class SmsDev
         ]);
 
         return $status;
+    }
+
+    /**
+     * Get a summarized usage report for a period.
+     *
+     * @param \DateTimeInterface $dateFrom Start of the period.
+     * @param \DateTimeInterface $dateTo End of the period.
+     *
+     * @throws TransportException If the PSR-18 client fails to send the request.
+     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws ApiException If the API reports a failure (situacao other than "OK").
+     */
+    public function getReport(\DateTimeInterface $dateFrom, \DateTimeInterface $dateTo): Report
+    {
+        $this->_result = [];
+
+        $params = [
+            'key'       => $this->apiKey,
+            'date_from' => Filter::convertDateToApiFormat($dateFrom),
+            'date_to'   => Filter::convertDateToApiFormat($dateTo),
+        ];
+
+        $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/report/total', $params);
+
+        $this->_result = $this->apiClient->send($request);
+
+        $result = $this->_result;
+
+        if (\array_key_exists('data_inicio', $result)) {
+            $result['data_inicio'] = $this->convertApiDate($result['data_inicio'], '!d/m/Y');
+        }
+
+        if (\array_key_exists('data_fim', $result)) {
+            $result['data_fim'] = $this->convertApiDate($result['data_fim'], '!d/m/Y');
+        }
+
+        $report = Report::fromArray($result);
+
+        if (!$report->isSuccess()) {
+            $this->logger->error('Failed to fetch report.', [
+                'date_from' => $params['date_from'],
+                'date_to'   => $params['date_to'],
+                'result'    => $this->_result,
+            ]);
+
+            throw new ApiException('', $report->getDescricao() ?? '');
+        }
+
+        $this->logger->info('Report fetched.', [
+            'date_from' => $params['date_from'],
+            'date_to'   => $params['date_to'],
+        ]);
+
+        return $report;
     }
 
     /**

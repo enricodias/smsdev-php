@@ -106,6 +106,24 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals(9999999, $query->id);
     }
 
+    public function testGetReport()
+    {
+        $SmsDev = $this->getServiceMock('{"situacao": "OK"}');
+
+        $dateFrom = new \DateTimeImmutable('2020-01-01', new \DateTimeZone('America/Sao_Paulo'));
+        $dateTo   = new \DateTimeImmutable('2020-01-30', new \DateTimeZone('America/Sao_Paulo'));
+
+        $SmsDev->getReport($dateFrom, $dateTo);
+
+        $this->assertSame('/v1/report/total', $this->getRequestPath());
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('', $query->key);
+        $this->assertEquals('01/01/2020', $query->date_from);
+        $this->assertEquals('30/01/2020', $query->date_to);
+    }
+
     public function testSetFilter()
     {
         $SmsDev = $this->getServiceMock();

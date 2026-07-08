@@ -115,11 +115,26 @@ class Filter
         $parsedDate = \DateTime::createFromFormat($this->dateFormat, $date);
 
         if ($parsedDate !== false) {
-            $parsedDate->setTimezone(new \DateTimeZone(self::API_TIMEZONE));
-
-            $this->query[$key] = $parsedDate->format('d/m/Y');
+            $this->query[$key] = self::convertDateToApiFormat($parsedDate);
         }
 
         return $this;
+    }
+
+    /**
+     * Converts a date to the format and timezone expected by the API (d/m/Y, America/Sao_Paulo).
+     *
+     * Shared by any endpoint that needs to send a date to the API, not just the search filter
+     * functions above.
+     *
+     * @param \DateTimeInterface $date
+     */
+    public static function convertDateToApiFormat(\DateTimeInterface $date): string
+    {
+        $apiDate = new \DateTime('@'.$date->getTimestamp());
+
+        $apiDate->setTimezone(new \DateTimeZone(self::API_TIMEZONE));
+
+        return $apiDate->format('d/m/Y');
     }
 }

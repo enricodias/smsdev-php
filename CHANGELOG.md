@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file, in reverse 
 - `Result\StatusResult` and `SmsDev::getStatus()`, querying the delivery status (DLR) of a
   previously sent message. Only a single id is supported since the API's documented
   response does not include an id field to correlate multiple results back to specific ids
+- `Result\Report` and `SmsDev::getReport()`, a summarized usage report for a period.
 
 #### Changed
 - Moved `SmsDev` into the `enricodias\SmsDev` namespace

@@ -172,6 +172,47 @@ final class ApiResponseTest extends SmsDevMock
         $SmsDev->getStatus([9999999, 8888888]);
     }
 
+    public function testGetReport()
+    {
+        $apiResponse = '{"situacao":"OK","codigo":"1","data_inicio":"01\/01\/2020","data_fim":"30\/01\/2020","enviada":"100","recebida":"10200","blacklist":"0","cancelada":"0","qtd_credito":"10300","descricao":"CONSULTA REALIZADA"}';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $dateFrom = new \DateTimeImmutable('2020-01-01', new \DateTimeZone('America/Sao_Paulo'));
+        $dateTo   = new \DateTimeImmutable('2020-01-30', new \DateTimeZone('America/Sao_Paulo'));
+
+        $report = $SmsDev->getReport($dateFrom, $dateTo);
+
+        $this->assertSame('2020-01-01', $report->getDataInicio()->format('Y-m-d')); // UTC conversion
+        $this->assertSame('2020-01-30', $report->getDataFim()->format('Y-m-d')); // UTC conversion
+        $this->assertSame(100, $report->getEnviada());
+        $this->assertSame(10200, $report->getRecebida());
+        $this->assertSame(10300, $report->getQtdCredito());
+
+        $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Report fetched.', [
+            'date_from' => '01/01/2020',
+            'date_to'   => '30/01/2020',
+        ]));
+    }
+
+    public function testGetReport_EmptyResponse()
+    {
+        $apiResponse = '{}';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $dateFrom = new \DateTimeImmutable('2020-01-01', new \DateTimeZone('America/Sao_Paulo'));
+        $dateTo   = new \DateTimeImmutable('2020-01-30', new \DateTimeZone('America/Sao_Paulo'));
+
+        try {
+            $SmsDev->getReport($dateFrom, $dateTo);
+
+            $this->fail('Expected ApiException was not thrown.');
+        } catch (ApiException $e) {
+            $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to fetch report.'));
+        }
+    }
+
     public function testPhoneNumberValidator()
     {
         $SmsDev = $this->getServiceMock('{"situacao": "OK", "codigo": "1", "id": "637849052", "descricao": "MENSAGEM NA FILA" }');

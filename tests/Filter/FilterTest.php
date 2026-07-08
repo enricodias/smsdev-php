@@ -104,4 +104,19 @@ final class FilterTest extends TestCase
 
         $this->assertSame(['status' => 1, 'date_from' => '01/01/2020'], $filter->toArray());
     }
+
+    /**
+     * Test the timezone calculations of the shared static helper used by other endpoints,
+     * such as getReport().
+     *
+     * Example: 2020-01-02 01:00:00 UTC should be day 2020-01-01 in America/Sao_Paulo.
+     */
+    public function testConvertDateToApiFormat()
+    {
+        \date_default_timezone_set('UTC');
+
+        $date = new \DateTimeImmutable('2020-01-02 01:00:00');
+
+        $this->assertSame('01/01/2020', Filter::convertDateToApiFormat($date));
+    }
 }
