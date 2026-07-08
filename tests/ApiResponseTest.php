@@ -8,8 +8,6 @@ use enricodias\SmsDev\Filter\Filter;
 
 /**
  * Test if the class can parse the API responses correctly.
- *
- * @see https://www.smsdev.com.br/ SMSDev API specification.
  */
 final class ApiResponseTest extends SmsDevMock
 {

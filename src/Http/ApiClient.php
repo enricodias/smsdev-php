@@ -39,8 +39,8 @@ class ApiClient
     /**
      * Sends a request to the smsdev.com.br API and returns the decoded JSON body.
      *
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws TransportException
+     * @throws InvalidResponseException
      */
     public function send(RequestInterface $request): array
     {

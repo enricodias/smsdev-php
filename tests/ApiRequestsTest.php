@@ -6,8 +6,6 @@ use enricodias\SmsDev\Filter\Filter;
 
 /**
  * Test if the requests sent are compatible with the API specification.
- *
- * @see https://www.smsdev.com.br/ SMSDev API specification.
  */
 final class ApiRequestsTest extends SmsDevMock
 {

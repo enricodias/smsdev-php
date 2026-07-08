@@ -30,8 +30,6 @@ use Psr\Log\NullLogger;
  * Send and receive SMS using SmsDev.com.br
  *
  * @see https://www.smsdev.com.br/
- *
- * @author Enrico Dias <enrico@enricodias.com>
  */
 class SmsDev
 {
@@ -132,7 +130,7 @@ class SmsDev
      *
      * This method does not guarantee that the recipient received the massage since the message delivery is async.
      *
-     * @param string|null $number
+     * @param string $number
      * @param string $message
      * @param string|null $refer (optional) User reference for message identification.
      *
@@ -140,11 +138,11 @@ class SmsDev
      *                         one-element array. Per-item failures are reported on the
      *                         MessageResult itself, they do not throw.
      *
-     * @throws InvalidPhoneNumberException If phone number validation is enabled and the number is invalid.
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws InvalidPhoneNumberException
+     * @throws TransportException
+     * @throws InvalidResponseException
      */
-    public function send(?string $number, string $message, ?string $refer = null): array
+    public function send(string $number, string $message, ?string $refer = null): array
     {
         $this->_result = [];
 
@@ -208,8 +206,8 @@ class SmsDev
      *                         one-element array. Per-item failures are reported on the
      *                         MessageResult itself, they do not throw.
      *
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws TransportException
+     * @throws InvalidResponseException
      */
     public function cancel($id): array
     {
@@ -249,8 +247,6 @@ class SmsDev
      *
      * The API returns a bare object when there is exactly one item in the response, and
      * only wraps results in an array when there is more than one item.
-     *
-     * @param array $result
      *
      * @return MessageResult[]
      */
@@ -298,8 +294,8 @@ class SmsDev
      *
      * @return ResponseMessage[] List of received messages.
      *
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
+     * @throws TransportException
+     * @throws InvalidResponseException
      */
     public function fetch(): array
     {
@@ -329,8 +325,6 @@ class SmsDev
      * Builds an array of ResponseMessage from a decoded fetch() API response.
      *
      * Dates are converted from the API timezone (America/Sao_Paulo) to the local timezone.
-     *
-     * @param array $result
      *
      * @return ResponseMessage[]
      */
@@ -380,9 +374,9 @@ class SmsDev
     /**
      * Get the current balance/credits.
      *
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
-     * @throws ApiException If the API reports a failure (situacao other than "OK").
+     * @throws TransportException
+     * @throws InvalidResponseException
+     * @throws ApiException
      */
     public function getBalance(): Balance
     {
@@ -423,9 +417,9 @@ class SmsDev
      * @return StatusResult
      *
      * @throws \InvalidArgumentException If an array of ids is passed.
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
-     * @throws ApiException If the API reports a failure (situacao other than "OK").
+     * @throws TransportException
+     * @throws InvalidResponseException
+     * @throws ApiException
      */
     public function getStatus($id): StatusResult
     {
@@ -469,12 +463,9 @@ class SmsDev
     /**
      * Get a summarized usage report for a period.
      *
-     * @param \DateTimeInterface $dateFrom Start of the period.
-     * @param \DateTimeInterface $dateTo End of the period.
-     *
-     * @throws TransportException If the PSR-18 client fails to send the request.
-     * @throws InvalidResponseException If the response body is not valid JSON or not the expected shape.
-     * @throws ApiException If the API reports a failure (situacao other than "OK").
+     * @throws TransportException
+     * @throws InvalidResponseException
+     * @throws ApiException
      */
     public function getReport(\DateTimeInterface $dateFrom, \DateTimeInterface $dateTo): Report
     {

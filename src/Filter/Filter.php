@@ -6,8 +6,6 @@ use enricodias\SmsDev\DateTime\ApiDateConverter;
 
 /**
  * Fluent builder for the fetch() search filter.
- *
- * @see https://www.smsdev.com.br/ SMSDev API specification.
  */
 class Filter
 {
