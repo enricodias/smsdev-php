@@ -8,6 +8,7 @@ use enricodias\SmsDev\Exceptions\InvalidResponseException;
 use enricodias\SmsDev\Exceptions\TransportException;
 use enricodias\SmsDev\Http\ApiClient;
 use enricodias\SmsDev\Http\RequestBuilder;
+use enricodias\SmsDev\DateTime\ApiDateConverter;
 use enricodias\SmsDev\Result\Balance;
 use enricodias\SmsDev\Result\MessageResult;
 use enricodias\SmsDev\Result\Report;
@@ -50,11 +51,6 @@ class SmsDev
      * @var bool
      */
     private $numberValidation = true;
-
-    /**
-     * @var \DateTimeZone
-     */
-    private $apiTimeZone;
 
     /**
      * Search filter used by fetch().
@@ -119,7 +115,6 @@ class SmsDev
         ?LoggerInterface $logger = null
     ) {
         $this->apiKey = $apiKey;
-        $this->apiTimeZone = new \DateTimeZone('America/Sao_Paulo');
         $this->filter = new Filter();
 
         $httpClient = $httpClient !== null ? $httpClient : Psr18ClientDiscovery::find();
@@ -370,18 +365,14 @@ class SmsDev
      */
     private function convertApiDate(string $value, string $field, string $format = 'd/m/Y H:i:s'): ?\DateTimeInterface
     {
-        $date = \DateTime::createFromFormat($format, $value, $this->apiTimeZone);
+        $date = ApiDateConverter::fromApiFormat($value, $format);
 
-        if (!$date) {
+        if ($date === null) {
             $this->logger->warning('Failed to parse date from API response.', [
                 'field' => $field,
                 'value' => $value,
             ]);
-
-            return null;
         }
-
-        $date->setTimezone(new \DateTimeZone(\date_default_timezone_get()));
 
         return $date;
     }
@@ -491,8 +482,8 @@ class SmsDev
 
         $params = [
             'key'       => $this->apiKey,
-            'date_from' => Filter::convertDateToApiFormat($dateFrom),
-            'date_to'   => Filter::convertDateToApiFormat($dateTo),
+            'date_from' => ApiDateConverter::toApiFormat($dateFrom),
+            'date_to'   => ApiDateConverter::toApiFormat($dateTo),
         ];
 
         $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/report/total', $params);

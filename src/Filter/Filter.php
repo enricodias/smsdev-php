@@ -2,6 +2,8 @@
 
 namespace enricodias\SmsDev\Filter;
 
+use enricodias\SmsDev\DateTime\ApiDateConverter;
+
 /**
  * Fluent builder for the fetch() search filter.
  *
@@ -9,8 +11,6 @@ namespace enricodias\SmsDev\Filter;
  */
 class Filter
 {
-    private const API_TIMEZONE = 'America/Sao_Paulo';
-
     /**
      * Date format accepted by \date().
      *
@@ -115,26 +115,9 @@ class Filter
         $parsedDate = \DateTime::createFromFormat($this->dateFormat, $date);
 
         if ($parsedDate !== false) {
-            $this->query[$key] = self::convertDateToApiFormat($parsedDate);
+            $this->query[$key] = ApiDateConverter::toApiFormat($parsedDate);
         }
 
         return $this;
-    }
-
-    /**
-     * Converts a date to the format and timezone expected by the API (d/m/Y, America/Sao_Paulo).
-     *
-     * Shared by any endpoint that needs to send a date to the API, not just the search filter
-     * functions above.
-     *
-     * @param \DateTimeInterface $date
-     */
-    public static function convertDateToApiFormat(\DateTimeInterface $date): string
-    {
-        $apiDate = new \DateTime('@'.$date->getTimestamp());
-
-        $apiDate->setTimezone(new \DateTimeZone(self::API_TIMEZONE));
-
-        return $apiDate->format('d/m/Y');
     }
 }
