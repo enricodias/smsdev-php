@@ -84,21 +84,23 @@ class ResponseMessage implements \JsonSerializable
 
     /**
      * Builds a ResponseMessage from a decoded API response item.
-     *
-     * @param array $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            \array_key_exists('situacao', $data) ? $data['situacao'] : '',
-            \array_key_exists('data_read', $data) ? $data['data_read'] : '',
-            \array_key_exists('telefone', $data) ? $data['telefone'] : '',
-            \array_key_exists('id', $data) ? $data['id'] : '',
-            \array_key_exists('refer', $data) ? $data['refer'] : '',
-            \array_key_exists('msg_sent', $data) ? $data['msg_sent'] : '',
-            \array_key_exists('id_sms_read', $data) ? $data['id_sms_read'] : '',
-            \array_key_exists('descricao', $data) ? $data['descricao'] : ''
-        );
+        $defaults = [
+            'situacao'    => '',
+            'data_read'   => '',
+            'telefone'    => '',
+            'id'          => '',
+            'refer'       => '',
+            'msg_sent'    => '',
+            'id_sms_read' => '',
+            'descricao'   => '',
+        ];
+
+        $data = \array_merge($defaults, $data);
+
+        return new self(...\array_values($data));
     }
 
     /**

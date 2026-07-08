@@ -102,23 +102,25 @@ class Report implements \JsonSerializable
 
     /**
      * Builds a Report from a decoded API response.
-     *
-     * @param array $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            \array_key_exists('situacao', $data) ? $data['situacao'] : '',
-            \array_key_exists('codigo', $data) ? $data['codigo'] : '',
-            \array_key_exists('data_inicio', $data) ? $data['data_inicio'] : '',
-            \array_key_exists('data_fim', $data) ? $data['data_fim'] : '',
-            \array_key_exists('enviada', $data) ? (int) $data['enviada'] : 0,
-            \array_key_exists('recebida', $data) ? (int) $data['recebida'] : 0,
-            \array_key_exists('blacklist', $data) ? (int) $data['blacklist'] : 0,
-            \array_key_exists('cancelada', $data) ? (int) $data['cancelada'] : 0,
-            \array_key_exists('qtd_credito', $data) ? (int) $data['qtd_credito'] : 0,
-            \array_key_exists('descricao', $data) ? $data['descricao'] : ''
-        );
+        $defaults = [
+            'situacao'    => '',
+            'codigo'      => '',
+            'data_inicio' => '',
+            'data_fim'    => '',
+            'enviada'     => 0,
+            'recebida'    => 0,
+            'blacklist'   => 0,
+            'cancelada'   => 0,
+            'qtd_credito' => 0,
+            'descricao'   => '',
+        ];
+
+        $data = \array_merge($defaults, $data);
+
+        return new self(...\array_values($data));
     }
 
     /**

@@ -53,17 +53,19 @@ class MessageResult implements \JsonSerializable
 
     /**
      * Builds a MessageResult from a decoded API response item.
-     *
-     * @param array $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            \array_key_exists('situacao', $data) ? $data['situacao'] : '',
-            \array_key_exists('codigo', $data) ? $data['codigo'] : '',
-            \array_key_exists('id', $data) ? $data['id'] : '',
-            \array_key_exists('descricao', $data) ? $data['descricao'] : ''
-        );
+        $defaults = [
+            'situacao'  => '',
+            'codigo'    => '',
+            'id'        => '',
+            'descricao' => '',
+        ];
+
+        $data = \array_merge($defaults, $data);
+
+        return new self(...\array_values($data));
     }
 
     /**

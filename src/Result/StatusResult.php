@@ -60,18 +60,20 @@ class StatusResult implements \JsonSerializable
 
     /**
      * Builds a StatusResult from a decoded API response.
-     *
-     * @param array $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            \array_key_exists('situacao', $data) ? $data['situacao'] : '',
-            \array_key_exists('codigo', $data) ? $data['codigo'] : '',
-            \array_key_exists('data_envio', $data) ? $data['data_envio'] : '',
-            \array_key_exists('operadora', $data) ? $data['operadora'] : '',
-            \array_key_exists('descricao', $data) ? $data['descricao'] : ''
-        );
+        $defaults = [
+            'situacao'   => '',
+            'codigo'     => '',
+            'data_envio' => '',
+            'operadora'  => '',
+            'descricao'  => '',
+        ];
+
+        $data = \array_merge($defaults, $data);
+
+        return new self(...\array_values($data));
     }
 
     /**

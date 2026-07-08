@@ -39,16 +39,18 @@ class Balance implements \JsonSerializable
 
     /**
      * Builds a Balance from a decoded API response.
-     *
-     * @param array $data
      */
     public static function fromArray(array $data): self
     {
-        return new self(
-            \array_key_exists('situacao', $data) ? $data['situacao'] : '',
-            \array_key_exists('saldo_sms', $data) ? (int) $data['saldo_sms'] : 0,
-            \array_key_exists('descricao', $data) ? $data['descricao'] : '',
-        );
+        $defaults = [
+            'situacao'  => '',
+            'saldo_sms' => 0,
+            'descricao' => '',
+        ];
+
+        $data = \array_merge($defaults, $data);
+
+        return new self(...\array_values($data));
     }
 
     /**
