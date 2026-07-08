@@ -5,16 +5,8 @@ namespace enricodias\SmsDev\Result;
 /**
  * One item of a fetch() response.
  */
-class ResponseMessage implements \JsonSerializable
+class ResponseMessage extends AbstractResult
 {
-    /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
-     *
-     * @var string
-     */
-    private $situacao;
-
     /**
      * Date the message was received, converted to the local timezone.
      *
@@ -104,23 +96,6 @@ class ResponseMessage implements \JsonSerializable
     }
 
     /**
-     * Whether this item is an actual received message (field "situacao" equals "OK").
-     */
-    public function isSuccess(): bool
-    {
-        return $this->situacao === 'OK';
-    }
-
-    /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
-     */
-    public function getSituacao(): string
-    {
-        return $this->situacao;
-    }
-
-    /**
      * Date the message was received, converted to the local timezone.
      *
      * The API always reports dates in the America/Sao_Paulo timezone. This value is
@@ -182,7 +157,7 @@ class ResponseMessage implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'situacao'    => $this->situacao,
+            ...parent::jsonSerialize(),
             'data_read'   => $this->dataRead instanceof \DateTimeInterface ? $this->dataRead->format(\DateTime::ATOM) : $this->dataRead,
             'telefone'    => $this->telefone,
             'id'          => $this->id,

@@ -8,16 +8,8 @@ namespace enricodias\SmsDev\Result;
  * Both endpoints are grouped by the API as MT (Mobile Terminated) operations and share
  * the exact same response shape.
  */
-class MessageResult implements \JsonSerializable
+class MessageResult extends AbstractResult
 {
-    /**
-     * "OK" - Successful operation
-     * "ERROR" - Operation with error
-     *
-     * @var string
-     */
-    private $situacao;
-
     /**
      * Error code table missing from official docs. Assuming "1" for success.
      *
@@ -69,23 +61,6 @@ class MessageResult implements \JsonSerializable
     }
 
     /**
-     * Whether this item was accepted by the API (field "situacao" equals "OK").
-     */
-    public function isSuccess(): bool
-    {
-        return $this->situacao === 'OK';
-    }
-
-    /**
-     * "OK" - Successful operation
-     * "ERROR" - Operation with error
-     */
-    public function getSituacao(): string
-    {
-        return $this->situacao;
-    }
-
-    /**
      * Error code table missing from official docs. Assuming "1" for success.
      */
     public function getCodigo(): ?string
@@ -112,7 +87,7 @@ class MessageResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'situacao'  => $this->situacao,
+            ...parent::jsonSerialize(),
             'codigo'    => $this->codigo,
             'id'        => $this->id,
             'descricao' => $this->descricao

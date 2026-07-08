@@ -5,16 +5,8 @@ namespace enricodias\SmsDev\Result;
 /**
  * Status Inquiry (DLR) response.
  */
-class StatusResult implements \JsonSerializable
+class StatusResult extends AbstractResult
 {
-    /**
-     * "OK" - The query itself succeeded
-     * "ERROR" - The query itself failed (e.g. invalid id)
-     *
-     * @var string
-     */
-    private $situacao;
-
     /**
      * Error code table missing from official docs. Assuming "1" for success.
      *
@@ -77,26 +69,6 @@ class StatusResult implements \JsonSerializable
     }
 
     /**
-     * Whether the query itself succeeded (field "situacao" equals "OK").
-     *
-     * This reflects whether the status could be retrieved, not the delivery status of the
-     * message itself. Use getDescricao() for the actual delivery status.
-     */
-    public function isSuccess(): bool
-    {
-        return $this->situacao === 'OK';
-    }
-
-    /**
-     * "OK" - The query itself succeeded
-     * "ERROR" - The query itself failed (e.g. invalid id)
-     */
-    public function getSituacao(): string
-    {
-        return $this->situacao;
-    }
-
-    /**
      * Error code table missing from official docs. Assuming "1" for success.
      */
     public function getCodigo(): string
@@ -141,7 +113,7 @@ class StatusResult implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'situacao'   => $this->situacao,
+            ...parent::jsonSerialize(),
             'codigo'     => $this->codigo,
             'data_envio' => $this->dataEnvio instanceof \DateTimeInterface ? $this->dataEnvio->format(\DateTime::ATOM) : $this->dataEnvio,
             'operadora'  => $this->operadora,

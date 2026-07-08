@@ -5,16 +5,8 @@ namespace enricodias\SmsDev\Result;
 /**
  * The getReport() (Total Report) response.
  */
-class Report implements \JsonSerializable
+class Report extends AbstractResult
 {
-    /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
-     *
-     * @var string
-     */
-    private $situacao;
-
     /**
      * Error code table missing from official docs. Assuming "1" for success.
      *
@@ -124,23 +116,6 @@ class Report implements \JsonSerializable
     }
 
     /**
-     * Whether the request was accepted by the API (field "situacao" equals "OK").
-     */
-    public function isSuccess(): bool
-    {
-        return $this->situacao === 'OK';
-    }
-
-    /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
-     */
-    public function getSituacao(): string
-    {
-        return $this->situacao;
-    }
-
-    /**
      * Error code table missing from official docs. Assuming "1" for success.
      */
     public function getCodigo(): string
@@ -219,7 +194,7 @@ class Report implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'situacao'    => $this->situacao,
+            ...parent::jsonSerialize(),
             'codigo'      => $this->codigo,
             'data_inicio' => $this->dataInicio instanceof \DateTimeInterface ? $this->dataInicio->format(\DateTime::ATOM) : $this->dataInicio,
             'data_fim'    => $this->dataFim instanceof \DateTimeInterface ? $this->dataFim->format(\DateTime::ATOM) : $this->dataFim,

@@ -5,16 +5,8 @@ namespace enricodias\SmsDev\Result;
 /**
  * The getBalance() response.
  */
-class Balance implements \JsonSerializable
+class Balance  extends AbstractResult
 {
-    /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
-     *
-     * @var string
-     */
-    private $situacao;
-
     /**
      * Current balance in BRL cents.
      *
@@ -54,23 +46,6 @@ class Balance implements \JsonSerializable
     }
 
     /**
-     * Whether the request was accepted by the API (field "situacao" equals "OK").
-     */
-    public function isSuccess(): bool
-    {
-        return $this->situacao === 'OK';
-    }
-
-    /**
-     * "OK" - Successful submission
-     * "ERROR" - Submission with error
-     */
-    public function getSituacao(): string
-    {
-        return $this->situacao;
-    }
-
-    /**
      * Current balance in credits.
      *
      * Sending one sms consumes 1 credit.
@@ -88,7 +63,7 @@ class Balance implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'situacao' => $this->situacao,
+            ...parent::jsonSerialize(),
             'saldo_sms' => $this->saldoSms,
             'descricao' => $this->descricao,
         ];
