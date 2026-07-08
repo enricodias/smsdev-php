@@ -9,6 +9,7 @@ use enricodias\SmsDev\Exceptions\TransportException;
 use enricodias\SmsDev\Http\ApiClient;
 use enricodias\SmsDev\Http\RequestBuilder;
 use enricodias\SmsDev\DateTime\ApiDateConverter;
+use enricodias\SmsDev\Message\Message;
 use enricodias\SmsDev\Result\Balance;
 use enricodias\SmsDev\Result\MessageResult;
 use enricodias\SmsDev\Result\Report;
@@ -37,6 +38,13 @@ class SmsDev
      * @var string
      */
     private const API_BASE_URL = 'https://api.smsdev.com.br/v1';
+
+    /**
+     * Maximum number of messages accepted per sendMultiple() request.
+     *
+     * @var int
+     */
+    private const MAX_MESSAGES_PER_REQUEST = 300;
 
     /**
      * @var string
@@ -144,35 +152,11 @@ class SmsDev
      */
     public function send(string $number, string $message, ?string $refer = null): array
     {
-        $this->_result = [];
+        $messageObject = Message::create($number, $message);
 
-        if ($this->numberValidation) {
-            try {
-                $number = (string) $this->phoneNumberValidator->validate($number);
-            } catch (InvalidPhoneNumberException $e) {
-                $this->logger->warning('Invalid phone number.', [
-                    'number' => $number,
-                    'reason' => $e->getMessage(),
-                ]);
+        if ($refer) $messageObject->setRefer($refer);
 
-                throw $e;
-            }
-        }
-
-        $params = [
-            'key'    => $this->apiKey,
-            'type'   => 9,
-            'number' => $number,
-            'msg'    => $message,
-        ];
-
-        if ($refer) $params['refer'] = $refer;
-
-        $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/send', $params);
-
-        $this->_result = $this->apiClient->send($request);
-
-        $results = $this->buildMessageResults($this->_result);
+        $results = $this->sendMultiple([$messageObject], false);
 
         $firstResult = $results[0] ?? null;
 
@@ -186,13 +170,143 @@ class SmsDev
             return $results;
         }
 
-        $this->logger->info('SMS message sent.', [
+        $this->logger->info('Single SMS message sent.', [
             'number' => $number,
             'message' => $message,
             'refer'  => $refer,
         ]);
 
         return $results;
+    }
+
+    /**
+     * Send multiple SMS messages in a single request.
+     *
+     * This method does not guarantee that the recipients received the message since the
+     * message delivery is async.
+     *
+     * @param Message[] $messages Up to 300 messages to send.
+     * @param bool $skipInvalidNumbers When true (default), messages with a phone number that
+     *                                 fails local validation are skipped instead of failing
+     *                                 the whole request.
+     *
+     * @return MessageResult[] One MessageResult per message actually sent, in the same order.
+     *                         Messages skipped due to an invalid number produce no
+     *                         MessageResult. Per-item API failures are reported on the
+     *                         MessageResult itself, they do not throw.
+     *
+     * @throws \InvalidArgumentException
+     * @throws InvalidPhoneNumberException
+     * @throws TransportException
+     * @throws InvalidResponseException
+     */
+    public function sendMultiple(array $messages, bool $skipInvalidNumbers = true): array
+    {
+        $this->_result = [];
+
+        $messageCount = \count($messages);
+
+        if ($messageCount === 0) {
+            throw new \InvalidArgumentException('sendMultiple() requires at least one message.');
+        }
+
+        if ($messageCount > self::MAX_MESSAGES_PER_REQUEST) {
+            throw new \InvalidArgumentException(\sprintf(
+                'sendMultiple() accepts a maximum of %d messages per request, %d given.',
+                self::MAX_MESSAGES_PER_REQUEST,
+                $messageCount
+            ));
+        }
+
+        $params = $this->buildSendMultipleParams($messages, $skipInvalidNumbers);
+
+        if (\count($params) === 0) {
+            return [];
+        }
+
+        $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/send', $params);
+
+        $this->_result = $this->apiClient->send($request);
+
+        $results = $this->buildMessageResults($this->_result);
+
+        $failedCount = 0;
+
+        foreach ($results as $result) {
+            if (!$result->isSuccess()) $failedCount++;
+        }
+
+        if ($failedCount > 0) {
+            $this->logger->error('One or more messages failed to send.', [
+                'total'  => \count($results),
+                'failed' => $failedCount,
+                'result' => $this->_result,
+            ]);
+
+            return $results;
+        }
+
+        $this->logger->info('Multiple SMS messages sent.', [
+            'count' => \count($results),
+        ]);
+
+        return $results;
+    }
+
+    /**
+     * Validates and converts a list of Message into API request items for sendMultiple().
+     *
+     * @param Message[] $messages
+     *
+     * @throws \InvalidArgumentException
+     * @throws InvalidPhoneNumberException
+     */
+    private function buildSendMultipleParams(array $messages, bool $skipInvalidNumbers): array
+    {
+        $params = [];
+
+        foreach ($messages as $message) {
+            if (!$message instanceof Message) {
+                throw new \InvalidArgumentException('sendMultiple() only accepts an array of Message instances.');
+            }
+
+            $number = $message->getNumber();
+
+            if ($this->numberValidation) {
+                try {
+                    $number = (string) $this->phoneNumberValidator->validate($number);
+                } catch (InvalidPhoneNumberException $e) {
+                    if (!$skipInvalidNumbers) {
+                        $this->logger->warning('Invalid phone number.', [
+                            'number' => $message->getNumber(),
+                            'reason' => $e->getMessage(),
+                        ]);
+
+                        throw $e;
+                    }
+
+                    $this->logger->warning('Skipping invalid phone number.', [
+                        'number' => $message->getNumber(),
+                        'reason' => $e->getMessage(),
+                    ]);
+
+                    continue;
+                }
+            }
+
+            $item = [
+                'key'    => $this->apiKey,
+                'type'   => 9,
+                'number' => $number,
+                'msg'    => $message->getMessage(),
+            ];
+
+            if ($message->getRefer()) $item['refer'] = $message->getRefer();
+
+            $params[] = $item;
+        }
+
+        return $params;
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace enricodias\SmsDev\Tests;
 
 use enricodias\SmsDev\Filter\Filter;
+use enricodias\SmsDev\Message\Message;
 
 /**
  * Test if the requests sent are compatible with the API specification.
@@ -37,10 +38,10 @@ final class ApiRequestsTest extends SmsDevMock
 
         $query = $this->getRequestBody();
 
-        $this->assertEquals('',              $query->key);
-        $this->assertEquals('9',             $query->type);
-        $this->assertEquals('5511988887777', $query->number);
-        $this->assertEquals('Message',       $query->msg);
+        $this->assertEquals('', $query[0]->key);
+        $this->assertEquals('9', $query[0]->type);
+        $this->assertEquals('5511988887777', $query[0]->number);
+        $this->assertEquals('Message', $query[0]->msg);
     }
 
     public function testSendWithRefer()
@@ -55,11 +56,37 @@ final class ApiRequestsTest extends SmsDevMock
 
         $query = $this->getRequestBody();
 
-        $this->assertEquals('',              $query->key);
-        $this->assertEquals('9',             $query->type);
-        $this->assertEquals('5511988887777', $query->number);
-        $this->assertEquals('Message',       $query->msg);
-        $this->assertEquals('Refer string',  $query->refer);
+        $this->assertEquals('', $query[0]->key);
+        $this->assertEquals('9', $query[0]->type);
+        $this->assertEquals('5511988887777', $query[0]->number);
+        $this->assertEquals('Message', $query[0]->msg);
+        $this->assertEquals('Refer string', $query[0]->refer);
+    }
+
+    public function testSendMultiple()
+    {
+        $SmsDev = $this->getServiceMock('[{"situacao": "OK"}, {"situacao": "OK"}]');
+
+        $SmsDev->setNumberValidation(false);
+
+        $SmsDev->sendMultiple([
+            Message::create('5511988887777', 'Message 1'),
+            Message::create('5521988887777', 'Message 2')->setRefer('Refer string'),
+        ]);
+
+        $this->assertSame('/v1/send', $this->getRequestPath());
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('', $query[0]->key);
+        $this->assertEquals('9', $query[0]->type);
+        $this->assertEquals('5511988887777', $query[0]->number);
+        $this->assertEquals('Message 1',  $query[0]->msg);
+        $this->assertObjectNotHasProperty('refer', $query[0]);
+
+        $this->assertEquals('5521988887777', $query[1]->number);
+        $this->assertEquals('Message 2', $query[1]->msg);
+        $this->assertEquals('Refer string', $query[1]->refer);
     }
 
     public function testCancel()
@@ -138,7 +165,7 @@ final class ApiRequestsTest extends SmsDevMock
 
         $query = $this->getRequestBody(0);
 
-        $this->assertEquals('',        $query->key);
+        $this->assertEquals('', $query->key);
         $this->assertEquals('0', $query->status);
         $this->assertEquals('2515974', $query->id);
         $this->assertEquals('19/01/2018', $query->date_from);
@@ -154,7 +181,7 @@ final class ApiRequestsTest extends SmsDevMock
         $query = $this->getRequestBody(1);
 
         $this->assertObjectNotHasProperty('id', $query);
-        $this->assertEquals('',        $query->key);
+        $this->assertEquals('', $query->key);
         $this->assertEquals(1, $query->status);
         $this->assertEquals('01/01/2019', $query->date_from);
         $this->assertEquals('01/01/2019', $query->date_to);

@@ -5,6 +5,7 @@ namespace enricodias\SmsDev\Tests;
 use enricodias\SmsDev\Exceptions\ApiException;
 use enricodias\SmsDev\Exceptions\InvalidPhoneNumberException;
 use enricodias\SmsDev\Filter\Filter;
+use enricodias\SmsDev\Message\Message;
 
 /**
  * Test if the class can parse the API responses correctly.
@@ -56,7 +57,7 @@ final class ApiResponseTest extends SmsDevMock
         $this->assertSame($expectedSuccess, $results[0]->isSuccess());
 
         if ($expectedSuccess) {
-            $this->assertTrue($this->getLogger()->hasRecord('info', 'SMS message sent.'));
+            $this->assertTrue($this->getLogger()->hasRecord('info', 'Single SMS message sent.'));
             return;
         }
 
@@ -219,7 +220,7 @@ final class ApiResponseTest extends SmsDevMock
         $this->assertCount(1, $results);
         $this->assertTrue($results[0]->isSuccess());
 
-        $this->assertTrue($this->getLogger()->hasRecord('info', 'SMS message sent.'));
+        $this->assertTrue($this->getLogger()->hasRecord('info', 'Single SMS message sent.'));
 
         try {
             $results = $SmsDev->send(1234, 'Message');
@@ -228,6 +229,103 @@ final class ApiResponseTest extends SmsDevMock
             $this->assertEmpty($results);
             $this->assertTrue($this->getLogger()->hasRecord('error', 'Failed to send SMS message.'));
         } catch (InvalidPhoneNumberException $e) {
+            $this->assertTrue($this->getLogger()->hasRecord('warning', 'Invalid phone number.'));
+        }
+    }
+
+    public function testSendMultiple()
+    {
+        $apiResponse = '[{"situacao":"OK","codigo":"1","id":"637849052","descricao":"MENSAGEM NA FILA"},{"situacao":"ERRO","codigo":"402","descricao":"SEM NUMERO DESTINATARIO."}]';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $SmsDev->setNumberValidation(false);
+
+        $results = $SmsDev->sendMultiple([
+            Message::create('1188881000', 'Message 1'),
+            Message::create('', 'Message 2'),
+        ]);
+
+        $this->assertCount(2, $results);
+        $this->assertTrue($results[0]->isSuccess());
+        $this->assertFalse($results[1]->isSuccess());
+
+        $this->assertTrue($this->getLogger()->hasRecordWithContext('error', 'One or more messages failed to send.', [
+            'total'  => 2,
+            'failed' => 1,
+        ]));
+    }
+
+    public function testSendMultiple_AllSuccess()
+    {
+        $apiResponse = '[{"situacao":"OK","codigo":"1","id":"1","descricao":"MENSAGEM NA FILA"},{"situacao":"OK","codigo":"1","id":"2","descricao":"MENSAGEM NA FILA"}]';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $SmsDev->setNumberValidation(false);
+
+        $results = $SmsDev->sendMultiple([
+            Message::create('1188881000', 'Message 1'),
+            Message::create('1188881001', 'Message 2'),
+        ]);
+
+        $this->assertCount(2, $results);
+
+        $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Multiple SMS messages sent.', [
+            'count' => 2,
+        ]));
+    }
+
+    public function testSendMultiple_EmptyArrayThrows()
+    {
+        $SmsDev = $this->getServiceMock();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $SmsDev->sendMultiple([]);
+    }
+
+    public function testSendMultiple_TooManyMessagesThrows()
+    {
+        $SmsDev = $this->getServiceMock();
+
+        $messages = [];
+
+        for ($i = 0; $i < 301; $i++) {
+            $messages[] = Message::create('1188881000', 'Message');
+        }
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $SmsDev->sendMultiple($messages);
+    }
+
+    public function testSendMultiple_InvalidItemThrows()
+    {
+        $SmsDev = $this->getServiceMock();
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $SmsDev->sendMultiple(['not a Message']);
+    }
+
+    public function testSendMultiple_InvalidPhoneNumber()
+    {
+        $apiResponse = '{"situacao":"ERRO","codigo":"402","descricao":"SEM NUMERO DESTINATARIO."}';
+
+        $SmsDev = $this->getServiceMock($apiResponse);
+
+        $results = $SmsDev->sendMultiple([
+            Message::create('1234', 'Message'),
+        ], true);
+
+        $this->assertIsArray($results);
+
+        try {
+            $results = $SmsDev->sendMultiple([
+                Message::create('1234', 'Message'),
+            ], false);
+        } catch(InvalidPhoneNumberException $e) {
             $this->assertTrue($this->getLogger()->hasRecord('warning', 'Invalid phone number.'));
         }
     }

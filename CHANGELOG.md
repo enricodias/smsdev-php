@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file, in reverse 
   previously sent message. Only a single id is supported since the API's documented
   response does not include an id field to correlate multiple results back to specific ids
 - `Result\Report` and `SmsDev::getReport()`, a summarized usage report for a period.
+- `Message\Message`, a fluent value object describing a message to send
+- `SmsDev::sendMultiple()`, sending up to 300 messages in a single request
 
 #### Fixed
 - Account balance is measured in credits, not cents.

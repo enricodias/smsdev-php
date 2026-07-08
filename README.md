@@ -94,6 +94,39 @@ A single message still returns a one-element array. Per-item failures are report
 
 The country code optional. The default is 55 (Brazil).
 
+### Sending multiple SMS messages
+
+Up to 300 messages can be sent in a single request using `sendMultiple()` and `\enricodias\SmsDev\Message\Message`, a fluent builder for each message:
+
+```php
+use enricodias\SmsDev\Message\Message;
+
+$results = $SmsDev->sendMultiple([
+    Message::create('5511988881111', 'SMS Message'),
+    Message::create('5521988882222', 'Another message')->setRefer('Reference Code'),
+]);
+
+foreach ($results as $result) {
+    if ($result->isSuccess()) {
+        echo $result->getId();
+
+        continue;
+    }
+
+    echo $result->getDescricao(); // API error message
+}
+```
+
+`send()` is a convenience wrapper around `sendMultiple()` for a single message.
+
+#### Invalid phone numbers
+
+By default, `sendMultiple()` silently skips messages with an invalid phone number instead of failing the whole request; skipped messages produce no `MessageResult`. Pass `false` as the second argument to throw `InvalidPhoneNumberException` on the first invalid number instead, same as `send()`:
+
+```php
+$SmsDev->sendMultiple($messages, false); // throws on the first invalid number
+```
+
 #### Phone number validation
 
 If you have the package [giggsey/libphonenumber-for-php](https://github.com/giggsey/libphonenumber-for-php) installed, it will be used to validate numbers locally. `SmsDev::send()` throws `InvalidPhoneNumberException` when the number is invalid, instead of sending the request.
@@ -267,7 +300,3 @@ The API uses the timezone America/Sao_Paulo. Using another timezone in your appl
 > Ex: if you are using UTC-4 and receive a new message, it will look like the message came from the future because America/Sao_Paulo is UTC-3.
 
 This class solves this problem by automatically correcting dates both in search filters and in parsed messages. Only the dates in raw API responses are not converted.
-
-## TODO
-
-- Send multiple SMS messages.
