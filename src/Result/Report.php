@@ -17,14 +17,14 @@ class Report extends AbstractResult
     /**
      * Start date of the requested period, converted to the local timezone.
      *
-     * @var \DateTimeInterface|string
+     * @var \DateTimeInterface|null
      */
     private $dataInicio;
 
     /**
      * End date of the requested period, converted to the local timezone.
      *
-     * @var \DateTimeInterface|string
+     * @var \DateTimeInterface|null
      */
     private $dataFim;
 
@@ -71,8 +71,8 @@ class Report extends AbstractResult
     public function __construct(
         string $situacao,
         string $codigo,
-        $dataInicio,
-        $dataFim,
+        ?\DateTimeInterface $dataInicio,
+        ?\DateTimeInterface $dataFim,
         int $enviada,
         int $recebida,
         int $blacklist,
@@ -100,8 +100,8 @@ class Report extends AbstractResult
         $defaults = [
             'situacao'    => '',
             'codigo'      => '',
-            'data_inicio' => '',
-            'data_fim'    => '',
+            'data_inicio' => null,
+            'data_fim'    => null,
             'enviada'     => 0,
             'recebida'    => 0,
             'blacklist'   => 0,
@@ -125,20 +125,16 @@ class Report extends AbstractResult
 
     /**
      * Start date of the requested period, converted to the local timezone.
-     *
-     * @return \DateTimeInterface|string fallback to string if the api doesn't send a valid date.
      */
-    public function getDataInicio()
+    public function getDataInicio(): ?\DateTimeInterface
     {
         return $this->dataInicio;
     }
 
     /**
      * End date of the requested period, converted to the local timezone.
-     *
-     * @return \DateTimeInterface|string fallback to string if the api doesn't send a valid date.
      */
-    public function getDataFim()
+    public function getDataFim(): ?\DateTimeInterface
     {
         return $this->dataFim;
     }
@@ -196,8 +192,8 @@ class Report extends AbstractResult
         return [
             ...parent::jsonSerialize(),
             'codigo'      => $this->codigo,
-            'data_inicio' => $this->dataInicio instanceof \DateTimeInterface ? $this->dataInicio->format(\DateTime::ATOM) : $this->dataInicio,
-            'data_fim'    => $this->dataFim instanceof \DateTimeInterface ? $this->dataFim->format(\DateTime::ATOM) : $this->dataFim,
+            'data_inicio' => $this->dataInicio !== null ? $this->dataInicio->format(\DateTime::ATOM) : null,
+            'data_fim'    => $this->dataFim !== null ? $this->dataFim->format(\DateTime::ATOM) : null,
             'enviada'     => $this->enviada,
             'recebida'    => $this->recebida,
             'blacklist'   => $this->blacklist,

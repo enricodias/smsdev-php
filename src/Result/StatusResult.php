@@ -17,7 +17,7 @@ class StatusResult extends AbstractResult
     /**
      * Date the message was sent, converted to the local timezone.
      *
-     * @var \DateTimeInterface|string
+     * @var \DateTimeInterface|null
      */
     private $dataEnvio;
 
@@ -39,7 +39,7 @@ class StatusResult extends AbstractResult
     public function __construct(
         string $situacao,
         string $codigo,
-        $dataEnvio,
+        ?\DateTimeInterface $dataEnvio,
         string $operadora,
         string $descricao
     ) {
@@ -58,7 +58,7 @@ class StatusResult extends AbstractResult
         $defaults = [
             'situacao'   => '',
             'codigo'     => '',
-            'data_envio' => '',
+            'data_envio' => null,
             'operadora'  => '',
             'descricao'  => '',
         ];
@@ -82,10 +82,8 @@ class StatusResult extends AbstractResult
      * The API always reports dates in the America/Sao_Paulo timezone. This value is
      * already converted to \date_default_timezone_get(), use \DateTimeInterface::format()
      * to render it in whatever format is needed.
-     *
-     * @return \DateTimeInterface|string fallback to string if the api doesn't send a valid date.
      */
-    public function getDataEnvio()
+    public function getDataEnvio(): ?\DateTimeInterface
     {
         return $this->dataEnvio;
     }
@@ -115,7 +113,7 @@ class StatusResult extends AbstractResult
         return [
             ...parent::jsonSerialize(),
             'codigo'     => $this->codigo,
-            'data_envio' => $this->dataEnvio instanceof \DateTimeInterface ? $this->dataEnvio->format(\DateTime::ATOM) : $this->dataEnvio,
+            'data_envio' => $this->dataEnvio !== null ? $this->dataEnvio->format(\DateTime::ATOM) : null,
             'operadora'  => $this->operadora,
             'descricao'  => $this->descricao,
         ];

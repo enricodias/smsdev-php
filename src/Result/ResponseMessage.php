@@ -10,7 +10,7 @@ class ResponseMessage extends AbstractResult
     /**
      * Date the message was received, converted to the local timezone.
      *
-     * @var \DateTimeInterface|string
+     * @var \DateTimeInterface|null
      */
     private $dataRead;
 
@@ -56,7 +56,7 @@ class ResponseMessage extends AbstractResult
 
     public function __construct(
         string $situacao,
-        $dataRead,
+        ?\DateTimeInterface $dataRead,
         string $telefone,
         string $id,
         string $refer,
@@ -81,7 +81,7 @@ class ResponseMessage extends AbstractResult
     {
         $defaults = [
             'situacao'    => '',
-            'data_read'   => '',
+            'data_read'   => null,
             'telefone'    => '',
             'id'          => '',
             'refer'       => '',
@@ -101,10 +101,8 @@ class ResponseMessage extends AbstractResult
      * The API always reports dates in the America/Sao_Paulo timezone. This value is
      * already converted to \date_default_timezone_get(), use \DateTimeInterface::format()
      * to render it in whatever format is needed.
-     *
-     * @return \DateTimeInterface|string fallback to string if the api doesn't send a valid date.
      */
-    public function getDataRead()
+    public function getDataRead(): ?\DateTimeInterface
     {
         return $this->dataRead;
     }
@@ -158,7 +156,7 @@ class ResponseMessage extends AbstractResult
     {
         return [
             ...parent::jsonSerialize(),
-            'data_read'   => $this->dataRead instanceof \DateTimeInterface ? $this->dataRead->format(\DateTime::ATOM) : $this->dataRead,
+            'data_read'   => $this->dataRead !== null ? $this->dataRead->format(\DateTime::ATOM) : null,
             'telefone'    => $this->telefone,
             'id'          => $this->id,
             'refer'       => $this->refer,

@@ -348,7 +348,7 @@ class SmsDev
                 continue;
             }
 
-            $item['data_read'] = $this->convertApiDate($item['data_read']);
+            $item['data_read'] = $this->convertApiDate($item['data_read'], 'data_read');
 
             $messages[] = ResponseMessage::fromArray($item);
         }
@@ -361,20 +361,24 @@ class SmsDev
      * \DateTimeInterface in the local timezone.
      *
      * @param string $value
+     * @param string $field Name of the field being converted, used for logging context
+     *                      when the value can't be parsed.
      * @param string $format Format accepted by \DateTime::createFromFormat(). Defaults to a
      *                       full date and time. Pass a date-only format (e.g. '!d/m/Y') for
      *                       fields that only carry a date, so unspecified time fields don't
      *                       leak the current time into the parsed value.
-     *
-     * @return \DateTimeInterface|string Falls back to the original string if it's not a
-     *                                   valid date in the expected format.
      */
-    private function convertApiDate(string $value, string $format = 'd/m/Y H:i:s')
+    private function convertApiDate(string $value, string $field, string $format = 'd/m/Y H:i:s'): ?\DateTimeInterface
     {
         $date = \DateTime::createFromFormat($format, $value, $this->apiTimeZone);
 
         if (!$date) {
-            return $value;
+            $this->logger->warning('Failed to parse date from API response.', [
+                'field' => $field,
+                'value' => $value,
+            ]);
+
+            return null;
         }
 
         $date->setTimezone(new \DateTimeZone(\date_default_timezone_get()));
@@ -450,7 +454,7 @@ class SmsDev
         $result = $this->_result;
 
         if (\array_key_exists('data_envio', $result)) {
-            $result['data_envio'] = $this->convertApiDate($result['data_envio']);
+            $result['data_envio'] = $this->convertApiDate($result['data_envio'], 'data_envio');
         }
 
         $status = StatusResult::fromArray($result);
@@ -498,11 +502,11 @@ class SmsDev
         $result = $this->_result;
 
         if (\array_key_exists('data_inicio', $result)) {
-            $result['data_inicio'] = $this->convertApiDate($result['data_inicio'], '!d/m/Y');
+            $result['data_inicio'] = $this->convertApiDate($result['data_inicio'], 'data_inicio', '!d/m/Y');
         }
 
         if (\array_key_exists('data_fim', $result)) {
-            $result['data_fim'] = $this->convertApiDate($result['data_fim'], '!d/m/Y');
+            $result['data_fim'] = $this->convertApiDate($result['data_fim'], 'data_fim', '!d/m/Y');
         }
 
         $report = Report::fromArray($result);

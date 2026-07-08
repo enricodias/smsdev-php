@@ -22,14 +22,14 @@ final class ReportTest extends TestCase
         $this->assertSame($expected, \json_encode($report));
     }
 
-    public function testJsonSerializeWithInvalidDates()
+    public function testJsonSerializeWithNullDates()
     {
-        $report = Report::fromArray($this->getResponse('Invalid Date', 'Invalid Date'));
+        $report = Report::fromArray($this->getResponse(null, null));
 
         $decoded = \json_decode(\json_encode($report), true);
 
-        $this->assertSame('Invalid Date', $decoded['data_inicio']);
-        $this->assertSame('Invalid Date', $decoded['data_fim']);
+        $this->assertNull($decoded['data_inicio']);
+        $this->assertNull($decoded['data_fim']);
     }
 
     public function testGetters()
@@ -61,8 +61,8 @@ final class ReportTest extends TestCase
         $this->assertFalse($report->isSuccess());
         $this->assertSame('ERRO', $report->getSituacao());
         $this->assertSame('', $report->getCodigo());
-        $this->assertSame('', $report->getDataInicio());
-        $this->assertSame('', $report->getDataFim());
+        $this->assertNull($report->getDataInicio());
+        $this->assertNull($report->getDataFim());
         $this->assertSame(0, $report->getEnviada());
         $this->assertSame(0, $report->getRecebida());
         $this->assertSame(0, $report->getBlacklist());
@@ -72,8 +72,8 @@ final class ReportTest extends TestCase
     }
 
     /**
-     * @param \DateTimeInterface|string $dataInicio
-     * @param \DateTimeInterface|string $dataFim
+     * @param \DateTimeInterface|string|null $dataInicio
+     * @param \DateTimeInterface|string|null $dataFim
      */
     private function getResponse($dataInicio, $dataFim): array
     {

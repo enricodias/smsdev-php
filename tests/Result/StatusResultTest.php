@@ -18,13 +18,13 @@ final class StatusResultTest extends TestCase
         $this->assertSame($expected, \json_encode($status));
     }
 
-    public function testJsonSerializeWithInvalidDataEnvio()
+    public function testJsonSerializeWithNullDataEnvio()
     {
-        $status = StatusResult::fromArray($this->getResponse('Invalid Date'));
+        $status = StatusResult::fromArray($this->getResponse(null));
 
         $decoded = \json_decode(\json_encode($status), true);
 
-        $this->assertSame('Invalid Date', $decoded['data_envio']);
+        $this->assertNull($decoded['data_envio']);
     }
 
     public function testFromArrayDefaultsMissingValuesToEmptyString()
@@ -35,11 +35,14 @@ final class StatusResultTest extends TestCase
 
         $this->assertSame('OK', $status->getSituacao());
         $this->assertSame('', $status->getCodigo());
-        $this->assertSame('', $status->getDataEnvio());
+        $this->assertNull($status->getDataEnvio());
         $this->assertSame('', $status->getOperadora());
         $this->assertSame('', $status->getDescricao());
     }
 
+    /**
+     * @param \DateTimeInterface|string|null $dataEnvio
+     */
     private function getResponse($dataEnvio): array
     {
         return [

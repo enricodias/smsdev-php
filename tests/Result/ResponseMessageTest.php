@@ -18,13 +18,13 @@ final class ResponseMessageTest extends TestCase
         $this->assertSame($expected, \json_encode($message));
     }
 
-    public function testJsonSerializeWithInvalidDataRead()
+    public function testJsonSerializeWithNullDataRead()
     {
-        $message = ResponseMessage::fromArray($this->getResponse('Invalid Date'));
+        $message = ResponseMessage::fromArray($this->getResponse(null));
 
         $decoded = \json_decode(\json_encode($message), true);
 
-        $this->assertSame('Invalid Date', $decoded['data_read']);
+        $this->assertNull($decoded['data_read']);
     }
 
     public function testFromArrayDefaultsMissingValuesToEmptyString()
@@ -34,7 +34,7 @@ final class ResponseMessageTest extends TestCase
         ]);
 
         $this->assertSame('OK', $message->getSituacao());
-        $this->assertSame('', $message->getDataRead());
+        $this->assertNull($message->getDataRead());
         $this->assertSame('', $message->getTelefone());
         $this->assertSame('', $message->getId());
         $this->assertSame('', $message->getRefer());
@@ -43,6 +43,9 @@ final class ResponseMessageTest extends TestCase
         $this->assertSame('', $message->getDescricao());
     }
 
+    /**
+     * @param \DateTimeInterface|string|null $dataRead
+     */
     private function getResponse($dataRead): array
     {
         return [

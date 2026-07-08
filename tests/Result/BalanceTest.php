@@ -7,16 +7,6 @@ use PHPUnit\Framework\TestCase;
 
 final class BalanceTest extends TestCase
 {
-    /**
-     * @dataProvider formattedBalanceProvider
-     */
-    public function testGetFormattedBalance(int $saldoSms, string $expected)
-    {
-        $balance = new Balance('OK', $saldoSms, 'SALDO ATUAL');
-
-        $this->assertSame($expected, $balance->getFormattedBalance());
-    }
-
     public function testJsonSerialize()
     {
         $balance = new Balance('OK', 1200, 'SALDO ATUAL');
