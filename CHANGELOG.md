@@ -10,7 +10,6 @@ All notable changes to this project will be documented in this file, in reverse 
 - `Result\MessageResult`, `Result\Balance` and `Result\ResponseMessage` typed response objects.
   `MessageResult` is shared by `send()` and `cancel()`, since the API groups both as MT
   (Mobile Terminated) operations with an identical response shape
-- `Balance::getFormattedBalance()`, the balance formatted as Brazilian currency (ex: "R$ 1,23")
 - `Exceptions\ApiException`, carrying the API's code and description fields
 - `Filter\Filter`, a fluent search filter builder for `fetch()`
 - `Validator\PhoneNumberValidator`, extracted from `SmsDev`
@@ -22,6 +21,9 @@ All notable changes to this project will be documented in this file, in reverse 
   previously sent message. Only a single id is supported since the API's documented
   response does not include an id field to correlate multiple results back to specific ids
 - `Result\Report` and `SmsDev::getReport()`, a summarized usage report for a period.
+
+#### Fixed
+- Account balance is measured in credits, not cents.
 
 #### Changed
 - Moved `SmsDev` into the `enricodias\SmsDev` namespace

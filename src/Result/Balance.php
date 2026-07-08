@@ -69,24 +69,16 @@ class Balance implements \JsonSerializable
     }
 
     /**
-     * Current balance in BRL cents.
+     * Current balance in credits.
+     *
+     * Sending one sms consumes 1 credit.
      */
     public function getSaldoSms(): int
     {
         return $this->saldoSms;
     }
 
-    /**
-     * Current balance formatted as Brazilian Real (ex: "R$ 1,23").
-     */
-    public function getFormattedBalance(): string
-    {
-        $reais = $this->saldoSms / 100;
-
-        return 'R$ '.\number_format($reais, 2, ',', '.');
-    }
-
-    public function getDescricao(): ?string
+    public function getDescricao(): string
     {
         return $this->descricao;
     }

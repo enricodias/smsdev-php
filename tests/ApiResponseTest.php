@@ -22,7 +22,6 @@ final class ApiResponseTest extends SmsDevMock
         $balance = $SmsDev->getBalance();
 
         $this->assertSame(1200, $balance->getSaldoSms());
-        $this->assertSame('R$ 12,00', $balance->getFormattedBalance());
 
         $this->assertTrue($this->getLogger()->hasRecordWithContext('info', 'Balance fetched.', [
             'balance' => 1200,

@@ -227,11 +227,12 @@ foreach ($messages as $message) {
 
 ### Checking the available account balance
 
+The balance is measured in credits. Sending one SMS consumes one credit.
+
 ```php
 $balance = $SmsDev->getBalance();
 
 $balance->saldoSms(); // 123
-$balance->getFormattedBalance(); // R$ 1,23
 ```
 
 ### Getting a usage report
