@@ -7,35 +7,23 @@ All notable changes to this project will be documented in this file, in reverse 
 #### Added
 - PSR-17 and PSR-18 support with auto discovery
 - PSR-3 logger support
-- `Result\MessageResult`, `Result\Balance` and `Result\ResponseMessage` typed response objects.
-  `MessageResult` is shared by `send()` and `cancel()`, since the API groups both as MT
-  (Mobile Terminated) operations with an identical response shape
-- `Exceptions\ApiException`, carrying the API's code and description fields
 - `Filter\Filter`, a fluent search filter builder for `fetch()`
-- `Validator\PhoneNumberValidator`, extracted from `SmsDev`
-- `Exceptions\InvalidPhoneNumberException`, thrown by `send()` when phone number validation is
-  enabled and rejects the number
-- `SmsDev::cancel()`, cancelling a previously queued message. Accepts one id or an array of ids,
-  returns an array of `MessageResult` (single item normalized into a one-element array)
-- `Result\StatusResult` and `SmsDev::getStatus()`, querying the delivery status (DLR) of a
-  previously sent message. Only a single id is supported since the API's documented
-  response does not include an id field to correlate multiple results back to specific ids
-- `Result\Report` and `SmsDev::getReport()`, a summarized usage report for a period.
+- `SmsDev::cancel()`, cancelling a previously queued message
+- `SmsDev::getStatus()`, querying the delivery status (DLR) of a previously sent message
+- `SmsDev::getReport()`, a summarized usage report for a period
 - `Message\Message`, a fluent value object describing a message to send
-- `SmsDev::sendMultiple()`, sending up to 300 messages in a single request
-- `Message::setSchedule()` and `SmsDev::send()`'s `$schedule` argument, scheduling a message for
-  later delivery instead of sending immediately
+- `SmsDev::sendMultiple()`, send up to 300 messages in a single request
+- `SmsDev::send()`'s `$schedule` argument, scheduling a message for later delivery instead of sending immediately
 
 #### Fixed
 - Account balance is measured in credits, not cents.
 
 #### Changed
 - Moved `SmsDev` into the `enricodias\SmsDev` namespace
-- `SmsDev::send()` now returns an array of `MessageResult` instead of `bool` (single item normalized
-  into a one-element array, per-item failures are reported on each `MessageResult` instead of throwing)
+- `SmsDev::send()` now throws `Exceptions\InvalidPhoneNumberException`
+- `SmsDev::send()` now returns an array of `MessageResult` instead of `bool`
 - `fetch()` now returns an array of `ResponseMessage` instead of `bool`
-- `SmsDev::getBalance()` now returns a `Balance` instead of `int`, and throws `ApiException` instead
-  of returning `0` on failure
+- `SmsDev::getBalance()` now returns a `Balance` instead of `int`, and throws `ApiException` instead of `0` on failure
 - `SmsDev::setFilter()` now accepts a built `Filter\Filter` instance instead of owning the filter
   state itself, e.g. `$smsDev->setFilter(Filter::create()->isUnread())`
 - `SmsDev::send()` now throws `InvalidPhoneNumberException` on a local validation failure instead
