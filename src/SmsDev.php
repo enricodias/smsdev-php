@@ -141,6 +141,7 @@ class SmsDev
      * @param string $number
      * @param string $message
      * @param string|null $refer (optional) User reference for message identification.
+     * @param \DateTimeInterface|null $schedule (optional) Date and time to send this message.
      *
      * @return MessageResult[] One MessageResult per recipient. A single message still returns a
      *                         one-element array. Per-item failures are reported on the
@@ -150,11 +151,13 @@ class SmsDev
      * @throws TransportException
      * @throws InvalidResponseException
      */
-    public function send(string $number, string $message, ?string $refer = null): array
+    public function send(string $number, string $message, ?string $refer = null, ?\DateTimeInterface $schedule = null): array
     {
         $messageObject = Message::create($number, $message);
 
         if ($refer) $messageObject->setRefer($refer);
+
+        if ($schedule) $messageObject->setSchedule($schedule);
 
         $results = $this->sendMultiple([$messageObject], false);
 
@@ -302,6 +305,13 @@ class SmsDev
             ];
 
             if ($message->getRefer()) $item['refer'] = $message->getRefer();
+
+            $schedule = $message->getSchedule();
+
+            if ($schedule) {
+                $item['jobdate'] = ApiDateConverter::toApiDateFormat($schedule);
+                $item['jobtime'] = ApiDateConverter::toApiTimeFormat($schedule);
+            }
 
             $params[] = $item;
         }
@@ -587,8 +597,8 @@ class SmsDev
 
         $params = [
             'key'       => $this->apiKey,
-            'date_from' => ApiDateConverter::toApiFormat($dateFrom),
-            'date_to'   => ApiDateConverter::toApiFormat($dateTo),
+            'date_from' => ApiDateConverter::toApiDateFormat($dateFrom),
+            'date_to'   => ApiDateConverter::toApiDateFormat($dateTo),
         ];
 
         $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/report/total', $params);

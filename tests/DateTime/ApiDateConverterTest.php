@@ -10,13 +10,25 @@ final class ApiDateConverterTest extends TestCase
     /**
      * Example: 2020-01-02 01:00:00 UTC should be day 2020-01-01 in America/Sao_Paulo.
      */
-    public function testToApiFormatConvertsTimezone()
+    public function testToApiDateFormatConvertsTimezone()
     {
         \date_default_timezone_set('UTC');
 
         $date = new \DateTimeImmutable('2020-01-02 01:00:00');
 
-        $this->assertSame('01/01/2020', ApiDateConverter::toApiFormat($date));
+        $this->assertSame('01/01/2020', ApiDateConverter::toApiDateFormat($date));
+    }
+
+    /**
+     * Example: 2020-01-01 13:30:00 UTC should be 10:30 in America/Sao_Paulo.
+     */
+    public function testToApiTimeFormatConvertsTimezone()
+    {
+        \date_default_timezone_set('UTC');
+
+        $date = new \DateTimeImmutable('2020-01-01 13:30:00');
+
+        $this->assertSame('10:30', ApiDateConverter::toApiTimeFormat($date));
     }
 
     /**

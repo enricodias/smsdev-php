@@ -119,6 +119,22 @@ foreach ($results as $result) {
 
 `send()` is a convenience wrapper around `sendMultiple()` for a single message.
 
+#### Scheduling a message
+
+A message can be scheduled for later delivery instead of being sent immediately, by passing a `\DateTimeInterface`:
+
+```php
+$schedule = new \DateTimeImmutable('2024-12-31 10:30:00');
+
+$SmsDev->send('5511988881111', 'SMS Message', null, $schedule);
+
+$SmsDev->sendMultiple([
+    Message::create('5511988881111', 'SMS Message')->setSchedule($schedule),
+]);
+```
+
+The date and time are converted to the API timezone (America/Sao_Paulo) automatically.
+
 #### Invalid phone numbers
 
 By default, `sendMultiple()` silently skips messages with an invalid phone number instead of failing the whole request; skipped messages produce no `MessageResult`. Pass `false` as the second argument to throw `InvalidPhoneNumberException` on the first invalid number instead, same as `send()`:

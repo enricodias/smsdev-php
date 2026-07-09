@@ -14,20 +14,37 @@ class ApiDateConverter
     public const API_TIMEZONE = 'America/Sao_Paulo';
 
     /**
-     * Converts a date to the format and timezone expected by the API (d/m/Y, America/Sao_Paulo).
+     * Converts a date to the format and timezone expected by the API (d/m/Y).
      */
-    public static function toApiFormat(\DateTimeInterface $date): string
+    public static function toApiDateFormat(\DateTimeInterface $date): string
+    {
+        return self::toApiTimezone($date)->format('d/m/Y');
+    }
+
+    /**
+     * Converts a time to the format and timezone expected by the API (H:i).
+     *
+     * Used by the `jobtime` field, paired with toApiDateFormat()'s `jobdate`, to schedule a message.
+     */
+    public static function toApiTimeFormat(\DateTimeInterface $date): string
+    {
+        return self::toApiTimezone($date)->format('H:i');
+    }
+
+    /**
+     * Converts a date to the timezone expected by the API.
+     */
+    private static function toApiTimezone(\DateTimeInterface $date): \DateTime
     {
         $apiDate = new \DateTime('@'.$date->getTimestamp());
 
         $apiDate->setTimezone(new \DateTimeZone(self::API_TIMEZONE));
 
-        return $apiDate->format('d/m/Y');
+        return $apiDate;
     }
 
     /**
-     * Converts a date string in the API's format (America/Sao_Paulo timezone) to a
-     * \DateTimeInterface in the local timezone.
+     * Converts a date string in the API's format and timezone to a \DateTimeInterface in the local timezone.
      *
      * @param string $format Format accepted by \DateTime::createFromFormat(). Defaults to a
      *                       full date and time. Pass a date-only format (e.g. '!d/m/Y') for

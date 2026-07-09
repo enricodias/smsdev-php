@@ -83,10 +83,50 @@ final class ApiRequestsTest extends SmsDevMock
         $this->assertEquals('5511988887777', $query[0]->number);
         $this->assertEquals('Message 1',  $query[0]->msg);
         $this->assertObjectNotHasProperty('refer', $query[0]);
+        $this->assertObjectNotHasProperty('jobdate', $query[0]);
+        $this->assertObjectNotHasProperty('jobtime', $query[0]);
 
         $this->assertEquals('5521988887777', $query[1]->number);
         $this->assertEquals('Message 2', $query[1]->msg);
         $this->assertEquals('Refer string', $query[1]->refer);
+    }
+
+    public function testSendWithSchedule()
+    {
+        $SmsDev = $this->getServiceMock('{"situacao": "OK"}');
+
+        $SmsDev->setNumberValidation(false);
+
+        $schedule = new \DateTimeImmutable('2020-01-01 10:30:00', new \DateTimeZone('America/Sao_Paulo'));
+
+        $SmsDev->send('5511988887777', 'Message', null, $schedule);
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('01/01/2020', $query[0]->jobdate);
+        $this->assertEquals('10:30', $query[0]->jobtime);
+    }
+
+    public function testSendMultipleWithSchedule()
+    {
+        $SmsDev = $this->getServiceMock('[{"situacao": "OK"}, {"situacao": "OK"}]');
+
+        $SmsDev->setNumberValidation(false);
+
+        $schedule = new \DateTimeImmutable('2020-01-01 10:30:00', new \DateTimeZone('America/Sao_Paulo'));
+
+        $SmsDev->sendMultiple([
+            Message::create('5511988887777', 'Message 1')->setSchedule($schedule),
+            Message::create('5521988887777', 'Message 2'),
+        ]);
+
+        $query = $this->getRequestBody();
+
+        $this->assertEquals('01/01/2020', $query[0]->jobdate);
+        $this->assertEquals('10:30', $query[0]->jobtime);
+
+        $this->assertObjectNotHasProperty('jobdate', $query[1]);
+        $this->assertObjectNotHasProperty('jobtime', $query[1]);
     }
 
     public function testCancel()

@@ -112,8 +112,8 @@ class Filter
     {
         $parsedDate = \DateTime::createFromFormat($this->dateFormat, $date);
 
-        if ($parsedDate !== false) {
-            $this->query[$key] = ApiDateConverter::toApiFormat($parsedDate);
+        if ($parsedDate) {
+            $this->query[$key] = ApiDateConverter::toApiDateFormat($parsedDate);
         }
 
         return $this;

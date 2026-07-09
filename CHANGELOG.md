@@ -23,6 +23,8 @@ All notable changes to this project will be documented in this file, in reverse 
 - `Result\Report` and `SmsDev::getReport()`, a summarized usage report for a period.
 - `Message\Message`, a fluent value object describing a message to send
 - `SmsDev::sendMultiple()`, sending up to 300 messages in a single request
+- `Message::setSchedule()` and `SmsDev::send()`'s `$schedule` argument, scheduling a message for
+  later delivery instead of sending immediately
 
 #### Fixed
 - Account balance is measured in credits, not cents.

@@ -24,6 +24,13 @@ class Message
      */
     private $refer;
 
+    /**
+     * Date and time this message should be sent at, instead of immediately.
+     *
+     * @var \DateTimeInterface|null
+     */
+    private $schedule;
+
     private function __construct(string $number, string $message)
     {
         $this->number = $number;
@@ -48,6 +55,16 @@ class Message
         return $this;
     }
 
+    /**
+     * Schedules this message to be sent at a later date and time, instead of immediately.
+     */
+    public function setSchedule(\DateTimeInterface $schedule): self
+    {
+        $this->schedule = $schedule;
+
+        return $this;
+    }
+
     public function getNumber(): string
     {
         return $this->number;
@@ -64,5 +81,13 @@ class Message
     public function getRefer(): ?string
     {
         return $this->refer;
+    }
+
+    /**
+     * Date and time this message should be sent at, instead of immediately.
+     */
+    public function getSchedule(): ?\DateTimeInterface
+    {
+        return $this->schedule;
     }
 }
