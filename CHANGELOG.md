@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file, in reverse 
 - `Message\Message`, a fluent value object describing a message to send
 - `SmsDev::sendMultiple()`, send up to 300 messages in a single request
 - `SmsDev::send()`'s `$schedule` argument, scheduling a message for later delivery instead of sending immediately
+- `Callback\CallbackParser`, parsing an inbound SmsDev callback request body (MO reply or DLR)
 
 #### Fixed
 - Account balance is measured in credits, not cents.

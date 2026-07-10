@@ -305,9 +305,40 @@ echo $report->getQtdCredito(); // credits consumed in the period
 
 `getReport()` throws `ApiException` if the query itself fails.
 
+### Parsing callbacks
+
+SmsDev can call a URL you configure at https://painel.smsdev.com.br/integracao/callback whenever a reply is received (MO) or a message's delivery status changes (DLR). `CallbackParser::parse()` turns the decoded body into a typed object:
+
+```php
+use enricodias\SmsDev\Callback\CallbackParser;
+use enricodias\SmsDev\Callback\MessageReceived;
+use enricodias\SmsDev\Callback\StatusUpdate;
+
+$callback = CallbackParser::parse($decodedRequestBody);
+
+if ($callback instanceof MessageReceived) {
+    echo $callback->getFrom();
+    echo $callback->getMessage();
+    echo $callback->getRefer();  // Refer identifier passed when the original message was sent
+    echo $callback->getIdSent(); // id of the original message this replies to
+}
+
+if ($callback instanceof StatusUpdate) {
+    echo $callback->getOperadora(); // Recipient's arrier, e.g. VIVO
+    echo $callback->getDataEnvio()->format('Y-m-d H:i:s'); // \DateTimeInterface, already converted to the local timezone
+
+    echo $callback->isDelivered(); // Message was delivered to the recipient's phone
+    echo $callback->isSent();      // Message was sent
+    echo $callback->isPending();   // Message is in queue
+    echo $callback->isRejected();  // Message was rejected
+}
+```
+
+`parse()` throws `\InvalidArgumentException` if the payload matches neither known shape.
+
 ## Serialization
 
-All typed responses are `\JsonSerializable`.
+All typed responses are `\JsonSerializable`. `Callback\MessageReceived` and `Callback\StatusUpdate` are the exception, since they represent an inbound request body rather than an API response.
 
 ## Timezone issues
 
