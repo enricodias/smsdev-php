@@ -63,7 +63,7 @@ class MessageResult extends AbstractResult
     /**
      * Error code table missing from official docs. Assuming "1" for success.
      */
-    public function getCodigo(): ?string
+    public function getCodigo(): string
     {
         return $this->codigo;
     }
@@ -71,7 +71,7 @@ class MessageResult extends AbstractResult
     /**
      * Unique ID of the message.
      */
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->id;
     }
@@ -79,7 +79,7 @@ class MessageResult extends AbstractResult
     /**
      * Description of the operation or error.
      */
-    public function getDescricao(): ?string
+    public function getDescricao(): string
     {
         return $this->descricao;
     }

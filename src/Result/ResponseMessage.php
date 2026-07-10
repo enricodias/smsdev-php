@@ -118,7 +118,7 @@ class ResponseMessage extends AbstractResult
     /**
      * Unique ID of the sending message (MT).
      */
-    public function getId(): ?string
+    public function getId(): string
     {
         return $this->id;
     }
@@ -126,12 +126,12 @@ class ResponseMessage extends AbstractResult
     /**
      * Refer identifier passed when the original message was sent (MT).
      */
-    public function getRefer(): ?string
+    public function getRefer(): string
     {
         return $this->refer;
     }
 
-    public function getMsgSent(): ?string
+    public function getMsgSent(): string
     {
         return $this->msgSent;
     }
@@ -144,7 +144,7 @@ class ResponseMessage extends AbstractResult
         return $this->idSmsRead;
     }
 
-    public function getDescricao(): ?string
+    public function getDescricao(): string
     {
         return $this->descricao;
     }

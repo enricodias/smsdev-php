@@ -5,12 +5,9 @@ namespace enricodias\SmsDev\Result;
 abstract class AbstractResult implements \JsonSerializable
 {
     public const API_SUCCESS = "OK";
-    public const API_ERROR = "ERROR";
+    public const API_ERROR = "ERRO";
 
     /**
-     * "OK" - The query itself succeeded
-     * "ERROR" - The query itself failed (e.g. invalid id)
-     *
      * @var string
      */
     protected $situacao;
@@ -28,7 +25,7 @@ abstract class AbstractResult implements \JsonSerializable
 
     /**
      * "OK" - The query itself succeeded
-     * "ERROR" - The query itself failed (e.g. invalid id)
+     * "ERRO" - The query itself failed (e.g. invalid id)
      */
     public function getSituacao(): string
     {

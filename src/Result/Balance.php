@@ -5,10 +5,10 @@ namespace enricodias\SmsDev\Result;
 /**
  * The getBalance() response.
  */
-class Balance  extends AbstractResult
+class Balance extends AbstractResult
 {
     /**
-     * Current balance in BRL cents.
+     * Current balance in credits.
      *
      * @var int
      */

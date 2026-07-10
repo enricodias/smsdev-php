@@ -70,7 +70,7 @@ class SmsDev
      *
      * @var array
      */
-    private $_result = [];
+    private $result = [];
 
     /**
      * Builds PSR-7 requests to be sent to the API.
@@ -108,10 +108,10 @@ class SmsDev
      * will be used automatically.
      *
      * @param string $apiKey
-     * @param LoggerInterface|null $logger
      * @param ClientInterface|null $httpClient
      * @param RequestFactoryInterface|null $requestFactory
      * @param StreamFactoryInterface|null $streamFactory
+     * @param LoggerInterface|null $logger
      */
     public function __construct(
         string $apiKey,
@@ -155,9 +155,13 @@ class SmsDev
     {
         $messageObject = Message::create($number, $message);
 
-        if ($refer) $messageObject->setRefer($refer);
+        if ($refer !== null) {
+            $messageObject->setRefer($refer);
+        }
 
-        if ($schedule) $messageObject->setSchedule($schedule);
+        if ($schedule !== null) {
+            $messageObject->setSchedule($schedule);
+        }
 
         $results = $this->sendMultiple([$messageObject], false);
 
@@ -167,7 +171,7 @@ class SmsDev
             $this->logger->error('Failed to send SMS message.', [
                 'number' => $number,
                 'refer'  => $refer,
-                'result' => $this->_result,
+                'result' => $this->result,
             ]);
 
             return $results;
@@ -205,7 +209,7 @@ class SmsDev
      */
     public function sendMultiple(array $messages, bool $skipInvalidNumbers = true): array
     {
-        $this->_result = [];
+        $this->result = [];
 
         $messageCount = \count($messages);
 
@@ -229,9 +233,9 @@ class SmsDev
 
         $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/send', $params);
 
-        $this->_result = $this->apiClient->send($request);
+        $this->result = $this->apiClient->send($request);
 
-        $results = $this->buildMessageResults($this->_result);
+        $results = $this->buildMessageResults($this->result);
 
         $failedCount = 0;
 
@@ -243,7 +247,7 @@ class SmsDev
             $this->logger->error('One or more messages failed to send.', [
                 'total'  => \count($results),
                 'failed' => $failedCount,
-                'result' => $this->_result,
+                'result' => $this->result,
             ]);
 
             return $results;
@@ -304,7 +308,9 @@ class SmsDev
                 'msg'    => $message->getMessage(),
             ];
 
-            if ($message->getRefer()) $item['refer'] = $message->getRefer();
+            if ($message->getRefer() !== null) {
+                $item['refer'] = $message->getRefer();
+            }
 
             $schedule = $message->getSchedule();
 
@@ -324,7 +330,7 @@ class SmsDev
      *
      * Only works while the message status is still queued, before dispatch.
      *
-     * @param int|string|array $id Message id, or an array of ids to cancel multiple messages.
+     * @param string|array $id Message id, or an array of ids to cancel multiple messages.
      *
      * @return MessageResult[] One MessageResult per id. A single id still returns a
      *                         one-element array. Per-item failures are reported on the
@@ -335,7 +341,7 @@ class SmsDev
      */
     public function cancel($id): array
     {
-        $this->_result = [];
+        $this->result = [];
 
         $params = [
             'key' => $this->apiKey,
@@ -344,16 +350,16 @@ class SmsDev
 
         $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/cancel', $params);
 
-        $this->_result = $this->apiClient->send($request);
+        $this->result = $this->apiClient->send($request);
 
-        $results = $this->buildMessageResults($this->_result);
+        $results = $this->buildMessageResults($this->result);
 
         $firstResult = $results[0] ?? null;
 
         if ($firstResult === null || !$firstResult->isSuccess()) {
             $this->logger->error('Failed to cancel message.', [
                 'id'     => $id,
-                'result' => $this->_result,
+                'result' => $this->result,
             ]);
 
             return $results;
@@ -423,19 +429,19 @@ class SmsDev
      */
     public function fetch(): array
     {
-        $this->_result = [];
+        $this->result = [];
 
         $query = $this->filter->toArray();
         $query['key'] = $this->apiKey;
 
         $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/inbox', $query);
 
-        $this->_result = $this->apiClient->send($request);
+        $this->result = $this->apiClient->send($request);
 
         // resets the filter to the default (all messages)
         $this->filter = new Filter();
 
-        $messages = $this->buildResponseMessages($this->_result);
+        $messages = $this->buildResponseMessages($this->result);
 
         $this->logger->info('Messages fetched.', [
             'filters' => $query,
@@ -504,22 +510,23 @@ class SmsDev
      */
     public function getBalance(): Balance
     {
-        $this->_result = [];
+        $this->result = [];
 
         $request = $this->requestBuilder->build('GET', self::API_BASE_URL.'/balance', [
             'key' => $this->apiKey,
         ]);
 
-        $this->_result = $this->apiClient->send($request);
+        $this->result = $this->apiClient->send($request);
 
-        $balance = Balance::fromArray($this->_result);
+        $balance = Balance::fromArray($this->result);
 
         if (!$balance->isSuccess()) {
             $this->logger->error('Failed to fetch balance.', [
-                'result' => $this->_result,
+                'result' => $this->result,
             ]);
 
-            throw new ApiException('', $balance->getDescricao() ?? '');
+            // The Balance response has no "codigo" field to report here, unlike getStatus() and getReport().
+            throw new ApiException('', $balance->getDescricao());
         }
 
         $this->logger->info('Balance fetched.', [
@@ -551,16 +558,16 @@ class SmsDev
             throw new \InvalidArgumentException('getStatus() only supports a single id.');
         }
 
-        $this->_result = [];
+        $this->result = [];
 
         $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/dlr', [
             'key' => $this->apiKey,
             'id'  => $id,
         ]);
 
-        $this->_result = $this->apiClient->send($request);
+        $this->result = $this->apiClient->send($request);
 
-        $result = $this->_result;
+        $result = $this->result;
 
         if (\array_key_exists('data_envio', $result)) {
             $result['data_envio'] = $this->convertApiDate($result['data_envio'], 'data_envio');
@@ -571,10 +578,10 @@ class SmsDev
         if (!$status->isSuccess()) {
             $this->logger->error('Failed to fetch message status.', [
                 'id'     => $id,
-                'result' => $this->_result,
+                'result' => $this->result,
             ]);
 
-            throw new ApiException('', $status->getDescricao() ?? '');
+            throw new ApiException($status->getCodigo(), $status->getDescricao());
         }
 
         $this->logger->info('Message status fetched.', [
@@ -593,7 +600,7 @@ class SmsDev
      */
     public function getReport(\DateTimeInterface $dateFrom, \DateTimeInterface $dateTo): Report
     {
-        $this->_result = [];
+        $this->result = [];
 
         $params = [
             'key'       => $this->apiKey,
@@ -603,9 +610,9 @@ class SmsDev
 
         $request = $this->requestBuilder->build('POST', self::API_BASE_URL.'/report/total', $params);
 
-        $this->_result = $this->apiClient->send($request);
+        $this->result = $this->apiClient->send($request);
 
-        $result = $this->_result;
+        $result = $this->result;
 
         if (\array_key_exists('data_inicio', $result)) {
             $result['data_inicio'] = $this->convertApiDate($result['data_inicio'], 'data_inicio', '!d/m/Y');
@@ -621,10 +628,10 @@ class SmsDev
             $this->logger->error('Failed to fetch report.', [
                 'date_from' => $params['date_from'],
                 'date_to'   => $params['date_to'],
-                'result'    => $this->_result,
+                'result'    => $this->result,
             ]);
 
-            throw new ApiException('', $report->getDescricao() ?? '');
+            throw new ApiException($report->getCodigo(), $report->getDescricao());
         }
 
         $this->logger->info('Report fetched.', [
@@ -638,12 +645,12 @@ class SmsDev
     /**
      * Get the raw API response from the last response received.
      *
-     * @see SmsDev::$_result Raw API response.
+     * @see SmsDev::$result Raw API response.
      *
      * @return array Raw API response.
      */
     public function getResult(): array
     {
-        return $this->_result;
+        return $this->result;
     }
 }
